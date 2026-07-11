@@ -1,0 +1,2653 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07152f" />
+    <title>Credit Genie — 5-minute presentation</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        /* Midnight Fintech palette: dark base, limited pastel accents for deck readability. */
+        --bg: #0b1220;
+        --surface: rgba(19, 30, 46, 0.94);
+        --surface-strong: rgba(15, 23, 42, 0.98);
+        --line: rgba(148, 163, 184, 0.28);
+        --text: #f8fafc;
+        --muted: #b6c2d1;
+        --cyan: #7dd3fc;
+        --cyan-soft: rgba(125, 211, 252, 0.16);
+        --amber: #fbbf77;
+        --amber-soft: rgba(251, 191, 119, 0.17);
+        --coral: #fda4af;
+        --coral-soft: rgba(253, 164, 175, 0.16);
+        --green: #5eead4;
+        --green-soft: rgba(94, 234, 212, 0.14);
+        --violet: #c4b5fd;
+        --violet-soft: rgba(196, 181, 253, 0.13);
+        --shadow: 0 18px 52px rgba(0, 0, 0, 0.32);
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      body {
+        background:
+          linear-gradient(135deg, #07111f 0%, #111827 46%, #0b1220 100%);
+      }
+
+      button {
+        font: inherit;
+      }
+
+      button:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: 3px;
+      }
+
+      .deck {
+        position: relative;
+        width: 100%;
+        height: 100dvh;
+        min-height: 0;
+      }
+
+      .slide {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: clamp(28px, 4vw, 72px);
+        overflow: hidden;
+        visibility: hidden;
+        opacity: 0;
+        transform: scale(0.995);
+        transition: opacity 280ms ease, transform 320ms ease, visibility 0s linear 320ms;
+      }
+
+      .slide.is-active {
+        z-index: 1;
+        visibility: visible;
+        opacity: 1;
+        transform: translateX(0);
+        transition-delay: 0s;
+      }
+
+      .slide::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(180deg, rgba(2, 8, 23, 0.18), rgba(2, 8, 23, 0.5)),
+          linear-gradient(135deg, rgba(94, 234, 212, 0.045), transparent 34%, rgba(251, 191, 119, 0.035) 72%, transparent);
+      }
+
+      .slide-bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -2;
+      }
+
+      .slide-content {
+        position: relative;
+        z-index: 2;
+        width: min(100%, 1500px);
+        max-height: 100%;
+        min-width: 0;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 14px;
+        color: var(--cyan);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(11px, 0.9vw, 15px);
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 28px;
+        height: 2px;
+        background: currentColor;
+        box-shadow: 0 0 16px currentColor;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        overflow-wrap: break-word;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        letter-spacing: -0.035em;
+      }
+
+      h1 {
+        max-width: 920px;
+        font-size: clamp(48px, 7vw, 112px);
+        line-height: 0.96;
+      }
+
+      h2 {
+        font-size: clamp(38px, 4.8vw, 76px);
+        line-height: 1;
+      }
+
+      h3 {
+        font-size: clamp(20px, 1.8vw, 30px);
+        line-height: 1.1;
+      }
+
+      .lede {
+        max-width: 820px;
+        margin: 22px 0 0;
+        color: #dbe9fa;
+        font-size: clamp(18px, 1.65vw, 28px);
+        line-height: 1.45;
+      }
+
+      .accent-cyan {
+        color: var(--cyan);
+      }
+
+      .accent-amber {
+        color: var(--amber);
+      }
+
+      .accent-coral {
+        color: var(--coral);
+      }
+
+      .glass {
+        border: 1px solid var(--line);
+        background: linear-gradient(145deg, rgba(12, 34, 72, 0.88), rgba(5, 16, 36, 0.8));
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 28px;
+      }
+
+      .tag {
+        padding: 9px 13px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 999px;
+        background: rgba(4, 14, 31, 0.7);
+        color: #dcecff;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(11px, 0.9vw, 14px);
+      }
+
+      .section-number {
+        position: absolute;
+        top: clamp(22px, 3vw, 48px);
+        right: clamp(24px, 4vw, 64px);
+        z-index: 3;
+        color: rgba(255, 255, 255, 0.52);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 13px;
+        letter-spacing: 0.14em;
+      }
+
+      /* Slide 1 */
+      .hero-slide {
+        place-items: end start;
+      }
+
+      .hero-slide::before {
+        background:
+          linear-gradient(90deg, rgba(2, 8, 20, 0.92) 0%, rgba(2, 8, 20, 0.6) 45%, rgba(2, 8, 20, 0.08) 76%),
+          linear-gradient(0deg, rgba(2, 8, 20, 0.82), transparent 62%);
+      }
+
+      .hero-copy {
+        width: min(65vw, 1000px);
+        padding-bottom: clamp(12px, 2vh, 30px);
+      }
+
+      .track-name {
+        max-width: 900px;
+      }
+
+      .hero-promise {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 14px;
+        align-items: center;
+        max-width: 760px;
+        margin-top: 28px;
+        padding: 16px 18px;
+        border-left: 3px solid var(--amber);
+        background: rgba(4, 14, 31, 0.7);
+      }
+
+      .hero-promise strong {
+        color: var(--amber);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .hero-promise span {
+        color: #e7f1ff;
+        font-size: clamp(14px, 1.2vw, 20px);
+      }
+
+      /* Slide 2 */
+      .football-slide {
+        padding: clamp(18px, 2.8vw, 42px) clamp(30px, 5vw, 78px);
+      }
+
+      .football-slide::before {
+        background: linear-gradient(180deg, rgba(4, 10, 20, 0.14), rgba(4, 10, 20, 0.42));
+      }
+
+      .borrower-stories {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-rows: minmax(0, 1fr);
+        gap: clamp(10px, 1.5vh, 16px);
+        width: min(100%, 1220px);
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .borrower-heading h2 {
+        font-size: clamp(28px, 3vw, 48px);
+      }
+
+      .borrower-heading .lede {
+        max-width: 960px;
+        margin-top: 8px;
+        color: #dfe7ef;
+        font-size: clamp(14px, 1.15vw, 19px);
+      }
+
+      .borrower-sequence {
+        display: grid;
+        min-height: 0;
+        overflow: hidden;
+        grid-template-columns: minmax(150px, 0.28fr) minmax(0, 1fr);
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+          "ronaldo-image ronaldo-story"
+          "messi-image messi-story";
+        gap: clamp(10px, 1.5vh, 16px) clamp(14px, 1.5vw, 24px);
+      }
+
+      .ronaldo-image { grid-area: ronaldo-image; }
+      .ronaldo-story { grid-area: ronaldo-story; }
+      .messi-image { grid-area: messi-image; }
+      .messi-story { grid-area: messi-story; }
+
+      #slide-2 [data-reveal-step] {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(10px);
+        transition: opacity 220ms ease, transform 240ms ease, visibility 0s linear 240ms;
+      }
+
+      #slide-2 [data-reveal-step].is-revealed {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+        transition-delay: 0s;
+      }
+
+      .borrower-sequence > * {
+        min-height: 0;
+      }
+
+      .borrower-story,
+      .football-portrait {
+        min-height: 0;
+        overflow: hidden;
+        border: 1px solid rgba(163, 176, 191, 0.28);
+        border-radius: 18px;
+        background: rgba(20, 31, 45, 0.9);
+        box-shadow: var(--shadow);
+      }
+
+      .borrower-story.personal-loan {
+        border-color: rgba(125, 211, 252, 0.34);
+        background: linear-gradient(145deg, rgba(27, 52, 76, 0.94), rgba(19, 31, 47, 0.94));
+      }
+
+      .borrower-story.bnpl {
+        border-color: rgba(253, 164, 175, 0.34);
+        background: linear-gradient(145deg, rgba(65, 42, 52, 0.92), rgba(22, 32, 48, 0.94));
+      }
+
+      .football-portrait {
+        display: grid;
+        place-items: center;
+        height: 100%;
+        margin: 0;
+        background: rgba(232, 232, 228, 0.94);
+      }
+
+      .football-portrait img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center top;
+        filter: saturate(0.9) contrast(0.97);
+      }
+
+      .borrower-story {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        gap: clamp(8px, 1vh, 12px);
+        min-width: 0;
+        padding: clamp(14px, 1.7vw, 24px) clamp(18px, 2.1vw, 30px);
+      }
+
+      .borrower-label {
+        color: var(--muted);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(10px, 0.85vw, 13px);
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .visual-journey {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+        gap: clamp(8px, 1vw, 14px);
+        align-items: stretch;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .visual-card {
+        position: relative;
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: 6px;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+        padding: clamp(8px, 1vw, 14px);
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .personal-loan .visual-card {
+        border-color: rgba(125, 211, 252, 0.28);
+        background: linear-gradient(180deg, rgba(125, 211, 252, 0.085), rgba(255, 255, 255, 0.035));
+      }
+
+      .personal-loan .visual-card:nth-child(3) {
+        border-color: rgba(251, 191, 119, 0.28);
+        background: linear-gradient(180deg, rgba(251, 191, 119, 0.085), rgba(255, 255, 255, 0.035));
+      }
+
+      .personal-loan .visual-card:nth-child(5) {
+        border-color: rgba(253, 164, 175, 0.28);
+        background: linear-gradient(180deg, rgba(253, 164, 175, 0.085), rgba(255, 255, 255, 0.035));
+      }
+
+      .bnpl .visual-card {
+        border-color: rgba(251, 191, 119, 0.28);
+        background: linear-gradient(180deg, rgba(251, 191, 119, 0.085), rgba(255, 255, 255, 0.035));
+      }
+
+      .bnpl .visual-card:nth-child(3) {
+        border-color: rgba(253, 164, 175, 0.3);
+        background: linear-gradient(180deg, rgba(253, 164, 175, 0.095), rgba(255, 255, 255, 0.035));
+      }
+
+      .bnpl .visual-card:nth-child(5) {
+        border-color: rgba(196, 181, 253, 0.28);
+        background: linear-gradient(180deg, rgba(196, 181, 253, 0.085), rgba(255, 255, 255, 0.035));
+      }
+
+      .visual-arrow {
+        display: grid;
+        place-items: center;
+        width: clamp(20px, 2vw, 34px);
+        color: rgba(220, 232, 244, 0.78);
+      }
+
+      .visual-arrow svg {
+        display: block;
+        width: clamp(20px, 1.8vw, 30px);
+        height: clamp(20px, 1.8vw, 30px);
+      }
+
+      .icon-credit {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+
+      .visual-card strong {
+        color: #f2f5f8;
+        font-size: clamp(12px, 0.95vw, 15px);
+        line-height: 1.15;
+        text-align: center;
+      }
+
+      .visual-card span {
+        color: var(--muted);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(8px, 0.62vw, 10px);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .visual-symbol {
+        position: relative;
+        width: clamp(38px, 4vw, 64px);
+        height: clamp(34px, 3.7vw, 58px);
+      }
+
+      .visual-image {
+        display: block;
+        width: min(100%, clamp(70px, 7vw, 118px));
+        height: clamp(54px, 5.8vw, 96px);
+        object-fit: cover;
+        border-radius: 10px;
+        filter: saturate(0.86) contrast(0.96);
+      }
+
+      .mobile-image {
+        width: min(100%, clamp(104px, 10vw, 166px));
+        height: clamp(74px, 8vw, 130px);
+        object-fit: contain;
+        background: rgba(255, 255, 255, 0.92);
+      }
+
+      .docs-symbol::before,
+      .docs-symbol::after {
+        content: "";
+        position: absolute;
+        width: 62%;
+        height: 72%;
+        border: 3px solid var(--amber);
+        border-radius: 5px;
+        background: rgba(216, 195, 159, 0.14);
+      }
+
+      .docs-symbol::before {
+        top: 6px;
+        left: 16%;
+      }
+
+      .docs-symbol::after {
+        top: 0;
+        left: 26%;
+      }
+
+      .clock-symbol {
+        border: 4px solid var(--coral);
+        border-radius: 50%;
+      }
+
+      .clock-symbol::before {
+        content: "";
+        position: absolute;
+        top: 22%;
+        left: 50%;
+        width: 4px;
+        height: 28%;
+        border-radius: 999px;
+        background: var(--coral);
+        transform: translateX(-50%);
+      }
+
+      .clock-symbol::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 28%;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--coral);
+      }
+
+      .decline-symbol {
+        display: grid;
+        place-items: center;
+        border: 4px solid var(--coral);
+        border-radius: 50%;
+      }
+
+      .decline-symbol::before,
+      .decline-symbol::after {
+        content: "";
+        position: absolute;
+        width: 64%;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--coral);
+      }
+
+      .decline-symbol::before {
+        transform: rotate(45deg);
+      }
+
+      .decline-symbol::after {
+        transform: rotate(-45deg);
+      }
+
+      .question-symbol {
+        display: grid;
+        place-items: center;
+        border: 4px dashed var(--amber);
+        border-radius: 50%;
+      }
+
+      .question-symbol::before {
+        content: "?";
+        color: var(--amber);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(34px, 3vw, 52px);
+        font-weight: 800;
+      }
+
+      .micro-line {
+        margin: 0;
+        color: #dfe8f2;
+        font-size: clamp(12px, 0.95vw, 15px);
+        line-height: 1.35;
+      }
+
+      .pain-point {
+        width: max-content;
+        max-width: 100%;
+        margin: 0;
+        padding: 8px 11px;
+        border-radius: 10px;
+        color: #17202b;
+        font-size: clamp(12px, 0.95vw, 15px);
+        font-weight: 700;
+      }
+
+      .personal-loan .pain-point {
+        background: var(--cyan);
+      }
+
+      .bnpl .pain-point {
+        background: var(--coral);
+      }
+
+      /* Slide 3 */
+      .modes-layout {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        gap: clamp(18px, 2.4vh, 30px);
+        height: 100%;
+      }
+
+      .mode-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 112px minmax(0, 1fr);
+        gap: 18px;
+        align-items: stretch;
+        min-height: 0;
+      }
+
+      .mode-card {
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        min-width: 0;
+        padding: clamp(20px, 2.2vw, 36px);
+        border-radius: 24px;
+      }
+
+      .mode-card.full {
+        border-color: rgba(125, 211, 252, 0.4);
+        background: linear-gradient(145deg, rgba(27, 52, 76, 0.92), rgba(18, 29, 44, 0.92));
+      }
+
+      .mode-card.fast {
+        border-color: rgba(251, 191, 119, 0.4);
+        background: linear-gradient(145deg, rgba(64, 50, 31, 0.92), rgba(20, 31, 45, 0.92));
+      }
+
+      .mode-label {
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      .mode-card.full .mode-label,
+      .mode-card.full .metric-value {
+        color: var(--cyan);
+      }
+
+      .mode-card.fast .mode-label,
+      .mode-card.fast .metric-value {
+        color: var(--amber);
+      }
+
+      .mode-card h3 {
+        margin-top: 8px;
+        font-size: clamp(26px, 2.8vw, 44px);
+      }
+
+      .flow-list {
+        display: grid;
+        gap: 8px;
+        align-content: center;
+        margin: 20px 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .flow-list li {
+        position: relative;
+        padding: 10px 12px 10px 34px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.035);
+        color: #d9e8fa;
+        font-size: clamp(13px, 1vw, 17px);
+      }
+
+      .mode-card.full .flow-list li {
+        border-color: rgba(125, 211, 252, 0.22);
+        background: rgba(125, 211, 252, 0.055);
+      }
+
+      .mode-card.fast .flow-list li {
+        border-color: rgba(251, 191, 119, 0.22);
+        background: rgba(251, 191, 119, 0.06);
+      }
+
+      .flow-list li::before {
+        content: "→";
+        position: absolute;
+        left: 12px;
+        color: var(--muted);
+      }
+
+      .mode-metrics {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .metric {
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .mode-card.full .metric {
+        background: rgba(125, 211, 252, 0.07);
+      }
+
+      .mode-card.fast .metric {
+        background: rgba(251, 191, 119, 0.07);
+      }
+
+      .metric-value {
+        display: block;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(20px, 1.8vw, 30px);
+        font-weight: 800;
+      }
+
+      .metric-label {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .mode-divider {
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .mode-divider::before,
+      .mode-divider::after {
+        content: "";
+        width: 1px;
+        height: 36%;
+        background: linear-gradient(transparent, var(--line), transparent);
+      }
+
+      .shared-foundation {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(16px, 3vw, 54px);
+        padding: 14px 20px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(6, 20, 44, 0.7);
+        color: #dbe9fa;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(11px, 1vw, 15px);
+      }
+
+      .shared-foundation strong {
+        color: var(--green);
+      }
+
+      .path-layout {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        gap: clamp(18px, 2.5vh, 30px);
+        height: 100%;
+      }
+
+      .agent-topology {
+        display: grid;
+        grid-template-columns: minmax(150px, 0.72fr) minmax(230px, 1fr) minmax(390px, 1.65fr) minmax(175px, 0.8fr);
+        gap: clamp(22px, 2.5vw, 44px);
+        align-items: stretch;
+        min-height: 0;
+      }
+
+      .topology-column {
+        position: relative;
+        display: grid;
+        align-content: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .topology-column:not(:last-child)::after,
+      .orchestrator-node::after,
+      .delegation-zone::after {
+        content: "→";
+        position: absolute;
+        z-index: 4;
+        top: 50%;
+        left: calc(100% + 5px);
+        width: clamp(12px, 2vw, 34px);
+        color: var(--cyan);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(18px, 1.7vw, 28px);
+        text-align: center;
+        transform: translateY(-50%);
+      }
+
+      .rules-topology .topology-column:not(:last-child)::after,
+      .rules-topology .orchestrator-node::after,
+      .rules-topology .delegation-zone::after {
+        color: var(--amber);
+      }
+
+      .source-node,
+      .tool-node {
+        padding: clamp(14px, 1.3vw, 20px);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(5, 18, 40, 0.84);
+      }
+
+      .source-node:nth-child(1) {
+        border-color: rgba(125, 211, 252, 0.28);
+        background: linear-gradient(145deg, rgba(125, 211, 252, 0.09), rgba(19, 30, 46, 0.78));
+      }
+
+      .source-node:nth-child(2) {
+        border-color: rgba(94, 234, 212, 0.26);
+        background: linear-gradient(145deg, rgba(94, 234, 212, 0.075), rgba(19, 30, 46, 0.78));
+      }
+
+      .tool-node:nth-child(1) {
+        border-color: rgba(251, 191, 119, 0.28);
+        background: linear-gradient(145deg, rgba(251, 191, 119, 0.085), rgba(19, 30, 46, 0.78));
+      }
+
+      .tool-node:nth-child(2) {
+        border-color: rgba(125, 211, 252, 0.28);
+        background: linear-gradient(145deg, rgba(125, 211, 252, 0.085), rgba(19, 30, 46, 0.78));
+      }
+
+      .tool-node:nth-child(3) {
+        border-color: rgba(196, 181, 253, 0.28);
+        background: linear-gradient(145deg, rgba(196, 181, 253, 0.075), rgba(19, 30, 46, 0.78));
+      }
+
+      .source-node strong,
+      .tool-node strong {
+        display: block;
+        color: #edf6ff;
+        font-size: clamp(13px, 1vw, 16px);
+      }
+
+      .source-node span,
+      .tool-node span {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: clamp(10px, 0.74vw, 12px);
+        line-height: 1.35;
+      }
+
+      .orchestrator-node {
+        position: relative;
+        display: grid;
+        align-content: center;
+        min-width: 0;
+        padding: clamp(22px, 2vw, 34px);
+        border: 1px solid rgba(94, 234, 212, 0.42);
+        border-radius: 22px;
+        background: linear-gradient(145deg, rgba(19, 76, 82, 0.92), rgba(15, 23, 42, 0.94));
+        box-shadow: 0 22px 70px rgba(0, 0, 0, 0.4), inset 0 0 34px rgba(94, 234, 212, 0.045);
+      }
+
+      .rules-topology .orchestrator-node {
+        border-color: rgba(251, 191, 119, 0.42);
+        background: linear-gradient(145deg, rgba(76, 55, 30, 0.92), rgba(15, 23, 42, 0.94));
+        box-shadow: 0 22px 70px rgba(0, 0, 0, 0.4), inset 0 0 34px rgba(251, 191, 119, 0.045);
+      }
+
+      .orchestrator-badge {
+        display: inline-flex;
+        width: max-content;
+        padding: 7px 9px;
+        border-radius: 8px;
+        background: var(--cyan-soft);
+        color: var(--cyan);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .rules-topology .orchestrator-badge {
+        background: var(--amber-soft);
+        color: var(--amber);
+      }
+
+      .orchestrator-node h3 {
+        margin-top: 14px;
+        font-size: clamp(25px, 2vw, 34px);
+      }
+
+      .orchestrator-node p {
+        margin: 12px 0 0;
+        color: #cfe1f5;
+        font-size: clamp(12px, 0.88vw, 14px);
+        line-height: 1.45;
+      }
+
+      .orchestrator-features {
+        display: grid;
+        gap: 6px;
+        margin-top: 16px;
+        padding: 0;
+        list-style: none;
+      }
+
+      .orchestrator-features li {
+        padding: 7px 9px;
+        border-radius: 7px;
+        background: rgba(2, 13, 31, 0.46);
+        color: #d9e8fa;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(9px, 0.68vw, 11px);
+      }
+
+      .delegation-zone {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto repeat(3, minmax(0, 1fr));
+        gap: 9px;
+        min-width: 0;
+        padding: 14px 14px 14px 28px;
+        border: 1px dashed rgba(94, 234, 212, 0.28);
+        border-radius: 20px;
+        background: rgba(5, 18, 40, 0.58);
+      }
+
+      .rules-topology .delegation-zone {
+        border-color: rgba(251, 191, 119, 0.3);
+      }
+
+      .delegation-zone::before {
+        content: "";
+        position: absolute;
+        top: 54px;
+        bottom: 24px;
+        left: 14px;
+        width: 1px;
+        background: linear-gradient(var(--green), rgba(94, 234, 212, 0.12));
+      }
+
+      .rules-topology .delegation-zone::before {
+        background: linear-gradient(var(--amber), rgba(251, 191, 119, 0.12));
+      }
+
+      .delegation-title {
+        color: var(--cyan);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .rules-topology .delegation-title {
+        color: var(--amber);
+      }
+
+      .subagent-card {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(112px, 0.8fr) minmax(0, 1.5fr);
+        gap: 12px;
+        align-items: center;
+        min-width: 0;
+        padding: clamp(10px, 1vw, 15px);
+        border: 1px solid rgba(125, 211, 252, 0.23);
+        border-radius: 12px;
+        background: rgba(3, 13, 31, 0.8);
+      }
+
+      .subagent-card:nth-of-type(1) {
+        border-color: rgba(125, 211, 252, 0.28);
+        background: linear-gradient(90deg, rgba(125, 211, 252, 0.075), rgba(19, 30, 46, 0.82));
+      }
+
+      .subagent-card:nth-of-type(2) {
+        border-color: rgba(94, 234, 212, 0.26);
+        background: linear-gradient(90deg, rgba(94, 234, 212, 0.07), rgba(19, 30, 46, 0.82));
+      }
+
+      .subagent-card:nth-of-type(3) {
+        border-color: rgba(253, 164, 175, 0.28);
+        background: linear-gradient(90deg, rgba(253, 164, 175, 0.075), rgba(19, 30, 46, 0.82));
+      }
+
+      .subagent-card::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: -18px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--cyan);
+        box-shadow: 0 0 12px var(--cyan);
+        transform: translateY(-50%);
+      }
+
+      .rules-topology .subagent-card::before {
+        background: var(--amber);
+        box-shadow: 0 0 12px var(--amber);
+      }
+
+      .subagent-card strong {
+        color: #f0f7ff;
+        font-size: clamp(12px, 0.92vw, 15px);
+      }
+
+      .subagent-card span {
+        color: var(--muted);
+        font-size: clamp(10px, 0.76vw, 12px);
+        line-height: 1.35;
+      }
+
+      .challenge-chip {
+        color: var(--coral) !important;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 9px !important;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .architecture-caption {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(16px, 3vw, 44px);
+        padding: 12px 18px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(5, 17, 38, 0.7);
+        color: var(--muted);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(10px, 0.8vw, 13px);
+      }
+
+      .architecture-caption strong {
+        color: var(--green);
+      }
+
+      .architecture-caption span:nth-child(2) {
+        color: var(--cyan);
+      }
+
+      .architecture-caption span:nth-child(3) {
+        color: var(--green);
+      }
+
+      .architecture-caption span:nth-child(4) {
+        color: var(--amber);
+      }
+
+      .architecture-caption span:nth-child(5) {
+        color: var(--violet);
+      }
+
+      .zero-llm {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        padding: 9px 12px;
+        border: 1px solid rgba(251, 191, 119, 0.34);
+        border-radius: 999px;
+        background: var(--amber-soft);
+        color: var(--amber);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .mermaid-layout {
+        display: grid;
+        grid-template-rows: minmax(0, 1fr);
+        gap: 0;
+        height: 100%;
+      }
+
+      .mermaid-slide {
+        padding: 8px;
+      }
+
+      .mermaid-slide .slide-content {
+        position: absolute;
+        inset: 8px;
+        width: auto;
+        height: auto;
+      }
+
+      .mermaid-slide .mermaid-layout,
+      .mermaid-slide .mermaid-frame {
+        position: absolute;
+        inset: 0;
+        height: auto;
+      }
+
+      .mermaid-frame {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        height: 100%;
+        overflow: hidden;
+        border: 1px solid rgba(125, 211, 252, 0.28);
+        border-radius: 22px;
+        background: rgba(4, 15, 34, 0.92);
+        box-shadow: var(--shadow);
+      }
+
+      .mermaid-output {
+        display: grid;
+        width: 100%;
+        height: 100%;
+        padding: 2px;
+        overflow: hidden;
+        place-items: center;
+      }
+
+      .mermaid-output svg {
+        display: block;
+        width: auto !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+      }
+
+      .mermaid-fallback {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        align-content: center;
+        gap: 10px;
+        padding: clamp(20px, 4vw, 60px);
+        color: #dbe9fa;
+      }
+
+      .mermaid-frame.is-rendered .mermaid-fallback {
+        display: none;
+      }
+
+      .mermaid-fallback strong {
+        color: var(--cyan);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 13px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .mermaid-fallback p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      /* Slide 4 */
+      .architecture-layout {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 18px;
+        height: calc(100dvh - clamp(56px, 8vw, 144px));
+        min-height: 0;
+      }
+
+      .architecture-stage {
+        position: relative;
+        min-height: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: #06132b;
+        box-shadow: var(--shadow);
+      }
+
+      .architecture-stage img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.86;
+      }
+
+      .architecture-stage::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, rgba(3, 11, 26, 0.72), transparent 25% 72%, rgba(3, 11, 26, 0.76));
+        pointer-events: none;
+      }
+
+      .arch-label {
+        position: absolute;
+        z-index: 2;
+        width: min(260px, 19vw);
+        padding: 11px 13px;
+        border: 1px solid rgba(125, 211, 252, 0.28);
+        border-radius: 11px;
+        background: rgba(3, 13, 31, 0.86);
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.34);
+        font-size: clamp(10px, 0.78vw, 13px);
+        line-height: 1.35;
+      }
+
+      .arch-label strong {
+        display: block;
+        margin-bottom: 3px;
+        color: var(--cyan);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .arch-sources { top: 5%; left: 2%; }
+      .arch-prep { top: 36%; left: 27%; }
+      .arch-router { top: 5%; left: 46%; }
+      .arch-full { bottom: 5%; left: 40%; border-color: rgba(94, 234, 212, 0.42); }
+      .arch-fast { bottom: 5%; right: 18%; border-color: rgba(251, 191, 119, 0.42); }
+      .arch-output { top: 5%; right: 2%; }
+
+      /* Slide 5 */
+      .agent-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(290px, 0.75fr);
+        gap: clamp(20px, 2.6vw, 42px);
+        align-items: stretch;
+        height: 100%;
+      }
+
+      .agent-visual {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+      }
+
+      .agent-visual img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .agent-pill {
+        position: absolute;
+        z-index: 2;
+        max-width: 200px;
+        padding: 9px 11px;
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: 10px;
+        background: rgba(3, 13, 31, 0.84);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.38);
+        font-size: clamp(10px, 0.78vw, 13px);
+        line-height: 1.3;
+      }
+
+      .agent-pill strong {
+        display: block;
+        color: var(--cyan);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .pill-eligibility { top: 7%; left: 3%; }
+      .pill-affordability { bottom: 6%; left: 3%; }
+      .pill-risk { right: 3%; bottom: 6%; }
+      .pill-orchestrator { top: 35%; left: 38%; }
+      .pill-explanation { top: 7%; right: 3%; }
+
+      .agent-copy {
+        display: grid;
+        align-content: center;
+        min-width: 0;
+      }
+
+      .agent-copy h2 {
+        margin-bottom: 20px;
+      }
+
+      .principle-card {
+        margin-top: 22px;
+        padding: 20px;
+        border: 1px solid rgba(251, 191, 119, 0.34);
+        border-radius: 16px;
+        background: var(--amber-soft);
+      }
+
+      .principle-card strong {
+        display: block;
+        color: var(--amber);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .principle-card p {
+        margin: 8px 0 0;
+        color: #f5e8d0;
+        font-size: clamp(15px, 1.2vw, 20px);
+        line-height: 1.45;
+      }
+
+      .challenge-flow {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 10px;
+        align-items: center;
+        margin-top: 18px;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(10px, 0.85vw, 13px);
+        text-align: center;
+      }
+
+      .challenge-node {
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+
+      .challenge-arrow {
+        color: var(--coral);
+      }
+
+      .agent-points {
+        display: grid;
+        gap: 12px;
+        margin: 18px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .agent-points li {
+        padding: 13px 15px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.045);
+        color: #dfe8f2;
+        font-size: clamp(15px, 1.12vw, 19px);
+        line-height: 1.35;
+      }
+
+      .agent-points li:nth-child(1) {
+        border-color: rgba(125, 211, 252, 0.28);
+        background: rgba(125, 211, 252, 0.065);
+      }
+
+      .agent-points li:nth-child(2) {
+        border-color: rgba(251, 191, 119, 0.28);
+        background: rgba(251, 191, 119, 0.065);
+      }
+
+      .agent-points li:nth-child(3) {
+        border-color: rgba(253, 164, 175, 0.28);
+        background: rgba(253, 164, 175, 0.065);
+      }
+
+      .agent-points strong {
+        color: var(--cyan);
+      }
+
+      /* Slide 6 */
+      .demo-layout {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        gap: clamp(20px, 2.8vh, 34px);
+        height: 100%;
+      }
+
+      .demo-header {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border: 1px solid rgba(253, 164, 175, 0.34);
+        border-radius: 999px;
+        background: var(--coral-soft);
+        color: #ffd5d2;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .live-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--coral);
+        box-shadow: 0 0 14px var(--coral);
+      }
+
+      .demo-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: clamp(14px, 1.6vw, 24px);
+        align-items: stretch;
+        min-height: 0;
+      }
+
+      .demo-card {
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        min-width: 0;
+        padding: clamp(20px, 2vw, 32px);
+        border-radius: 20px;
+      }
+
+      .demo-card:nth-child(1) {
+        border-color: rgba(125, 211, 252, 0.28);
+        background: linear-gradient(145deg, rgba(125, 211, 252, 0.07), rgba(19, 30, 46, 0.92));
+      }
+
+      .demo-card:nth-child(2) {
+        border-color: rgba(251, 191, 119, 0.28);
+        background: linear-gradient(145deg, rgba(251, 191, 119, 0.07), rgba(19, 30, 46, 0.92));
+      }
+
+      .demo-card:nth-child(3) {
+        border-color: rgba(94, 234, 212, 0.26);
+        background: linear-gradient(145deg, rgba(94, 234, 212, 0.065), rgba(19, 30, 46, 0.92));
+      }
+
+      .demo-time {
+        color: var(--muted);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 12px;
+      }
+
+      .demo-card h3 {
+        margin-top: 12px;
+        font-size: clamp(25px, 2.2vw, 36px);
+      }
+
+      .demo-card p {
+        margin: 14px 0;
+        color: #cadbee;
+        font-size: clamp(14px, 1.08vw, 18px);
+        line-height: 1.5;
+      }
+
+      .outcome {
+        justify-self: start;
+        padding: 8px 11px;
+        border-radius: 8px;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .outcome.refer { background: var(--amber-soft); color: var(--amber); }
+      .outcome.decline { background: var(--coral-soft); color: var(--coral); }
+      .outcome.approve { background: rgba(94, 234, 212, 0.14); color: var(--green); }
+
+      .demo-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 15px 18px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(6, 20, 44, 0.72);
+        color: #dceaff;
+        font-size: clamp(13px, 1.05vw, 17px);
+      }
+
+      .demo-footer span:last-child {
+        color: var(--cyan);
+        font-family: "SFMono-Regular", Consolas, monospace;
+      }
+
+      /* Bottleneck slide */
+      .bottleneck-layout {
+        display: grid;
+        grid-template-rows: auto auto auto;
+        align-content: center;
+        gap: clamp(18px, 3vh, 34px);
+        height: 100%;
+      }
+
+      .bottleneck-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        min-height: auto;
+      }
+
+      .bottleneck-map {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: clamp(12px, 1.3vw, 20px);
+        align-items: stretch;
+        min-height: auto;
+      }
+
+      .bottleneck-stage {
+        position: relative;
+        display: grid;
+        grid-column: span 2;
+        grid-template-rows: auto 1fr auto;
+        gap: 14px;
+        min-width: 0;
+        min-height: clamp(132px, 18vh, 172px);
+        padding: clamp(16px, 1.55vw, 24px);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(19, 30, 46, 0.94), rgba(15, 23, 42, 0.94));
+        overflow: hidden;
+      }
+
+      .bottleneck-stage:nth-child(4) {
+        grid-column: 2 / span 2;
+      }
+
+      .bottleneck-stage:nth-child(5) {
+        grid-column: 4 / span 2;
+      }
+
+      .bottleneck-stage::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 4px;
+        background: var(--cyan);
+      }
+
+      .bottleneck-stage:nth-child(2)::before,
+      .bottleneck-stage:nth-child(3)::before {
+        background: var(--amber);
+      }
+
+      .bottleneck-stage:nth-child(4)::before,
+      .bottleneck-stage:nth-child(5)::before {
+        background: var(--coral);
+      }
+
+      .stage-time {
+        color: var(--muted);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(10px, 0.8vw, 12px);
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .bottleneck-stage strong {
+        color: #f8fafc;
+        font-size: clamp(22px, 2vw, 34px);
+        line-height: 1.08;
+      }
+
+      .bottleneck-stage p {
+        margin: 0;
+        color: #cad7e6;
+        font-size: clamp(12px, 0.95vw, 15px);
+        line-height: 1.35;
+      }
+
+      .stage-mode {
+        width: max-content;
+        max-width: 100%;
+        padding: 7px 9px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--muted);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(9px, 0.68vw, 11px);
+        text-transform: uppercase;
+      }
+
+      .bottleneck-panel {
+        display: grid;
+        align-content: center;
+        gap: 14px;
+        min-width: 0;
+        padding: clamp(22px, 2.2vw, 34px);
+        border: 1px solid rgba(251, 191, 119, 0.32);
+        border-radius: 24px;
+        background: linear-gradient(145deg, rgba(76, 55, 30, 0.78), rgba(15, 23, 42, 0.94));
+        box-shadow: var(--shadow);
+      }
+
+      .bottleneck-panel h3 {
+        color: var(--amber);
+        font-size: clamp(26px, 2.4vw, 42px);
+      }
+
+      .bottleneck-panel p {
+        margin: 0;
+        color: #e8eef6;
+        font-size: clamp(15px, 1.2vw, 20px);
+        line-height: 1.42;
+      }
+
+      .bottleneck-list {
+        display: grid;
+        gap: 10px;
+        margin: 4px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .bottleneck-list li {
+        padding: 11px 12px;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.62);
+        color: #dce7f3;
+        font-size: clamp(12px, 0.95vw, 15px);
+        line-height: 1.35;
+      }
+
+      .bottleneck-list strong {
+        color: var(--cyan);
+      }
+
+      .bottleneck-decision {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 14px;
+        align-items: center;
+        padding: 14px 18px;
+        border: 1px solid rgba(94, 234, 212, 0.28);
+        border-radius: 16px;
+        background: linear-gradient(90deg, rgba(94, 234, 212, 0.09), rgba(125, 211, 252, 0.06));
+        color: #e6f7f5;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(11px, 0.9vw, 14px);
+        text-align: center;
+      }
+
+      .bottleneck-decision span {
+        color: var(--amber);
+      }
+
+      /* Slide 7 */
+      .coverage-layout {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 20px;
+        height: 100%;
+      }
+
+      .coverage-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+        gap: clamp(16px, 2vw, 30px);
+        min-height: 0;
+      }
+
+      .persona-table-wrap {
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: rgba(5, 17, 38, 0.86);
+        box-shadow: var(--shadow);
+      }
+
+      .persona-table {
+        width: 100%;
+        height: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      .persona-table th,
+      .persona-table td {
+        padding: clamp(10px, 1.15vw, 18px);
+        border-bottom: 1px solid rgba(125, 211, 252, 0.13);
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      .persona-table tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .persona-table th {
+        color: var(--muted);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .persona-name {
+        font-weight: 700;
+      }
+
+      .persona-proof {
+        color: #c6d8ec;
+        font-size: clamp(12px, 0.9vw, 15px);
+        line-height: 1.35;
+      }
+
+      .outcome-chip {
+        display: inline-block;
+        padding: 6px 8px;
+        border-radius: 7px;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(10px, 0.76vw, 12px);
+        font-weight: 800;
+      }
+
+      .controls-stack {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 14px;
+        min-height: 0;
+      }
+
+      .policy-flip {
+        padding: 18px;
+        border: 1px solid rgba(251, 191, 119, 0.34);
+        border-radius: 16px;
+        background: var(--amber-soft);
+      }
+
+      .policy-flip strong {
+        display: block;
+        color: var(--amber);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .policy-change {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 10px;
+        align-items: center;
+        margin-top: 14px;
+        text-align: center;
+      }
+
+      .policy-version {
+        padding: 10px;
+        border-radius: 10px;
+        background: rgba(5, 17, 38, 0.65);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 12px;
+      }
+
+      .policy-change > span {
+        color: var(--amber);
+      }
+
+      .control-list {
+        display: grid;
+        gap: 9px;
+        align-content: center;
+        margin: 0;
+        padding: 18px 18px 18px 42px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(5, 17, 38, 0.82);
+        color: #d4e3f4;
+        font-size: clamp(12px, 0.95vw, 16px);
+        line-height: 1.35;
+      }
+
+      .control-list li::marker {
+        color: var(--cyan);
+      }
+
+      /* Slide 8 */
+      .closing-slide {
+        place-items: center start;
+      }
+
+      .closing-slide::before {
+        background:
+          linear-gradient(90deg, rgba(2, 8, 20, 0.9), rgba(2, 8, 20, 0.58) 48%, rgba(2, 8, 20, 0.1) 78%),
+          linear-gradient(0deg, rgba(2, 8, 20, 0.5), transparent 50%);
+      }
+
+      .closing-copy {
+        width: min(59vw, 900px);
+      }
+
+      .closing-statement {
+        margin: 24px 0 0;
+        padding-left: 20px;
+        border-left: 3px solid var(--cyan);
+        color: #e6f1ff;
+        font-size: clamp(20px, 1.75vw, 30px);
+        line-height: 1.45;
+      }
+
+      .closing-values {
+        display: grid;
+        grid-template-columns: repeat(3, auto);
+        gap: 12px;
+        justify-content: start;
+        margin-top: 30px;
+      }
+
+      .closing-value {
+        padding: 12px 15px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 10px;
+        background: rgba(4, 14, 31, 0.72);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: clamp(11px, 0.9vw, 14px);
+        text-transform: uppercase;
+      }
+
+      .closing-value:nth-child(1) {
+        border-color: rgba(125, 211, 252, 0.32);
+        background: var(--cyan-soft);
+        color: var(--cyan);
+      }
+
+      .closing-value:nth-child(2) {
+        border-color: rgba(251, 191, 119, 0.32);
+        background: var(--amber-soft);
+        color: var(--amber);
+      }
+
+      .closing-value:nth-child(3) {
+        border-color: rgba(94, 234, 212, 0.3);
+        background: var(--green-soft);
+        color: var(--green);
+      }
+
+      .speaker-notes {
+        display: none;
+      }
+
+      /* Moderate pastel palette: keep the deck professional, but let content carry color. */
+      .slide-bg,
+      .architecture-stage img,
+      .agent-visual img {
+        filter: saturate(0.82) brightness(0.84) contrast(0.98);
+      }
+
+      .glass,
+      .mode-card,
+      .control-list,
+      .persona-table-wrap,
+      .mermaid-frame {
+        background: linear-gradient(145deg, rgba(24, 36, 54, 0.94), rgba(16, 27, 42, 0.94));
+        border-color: var(--line);
+        box-shadow: var(--shadow);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      .orchestrator-node {
+        border-color: rgba(94, 234, 212, 0.38);
+        background: linear-gradient(145deg, rgba(22, 75, 82, 0.9), rgba(15, 23, 42, 0.95));
+        box-shadow: var(--shadow);
+      }
+
+      .rules-topology .orchestrator-node {
+        border-color: rgba(251, 191, 119, 0.38);
+        background: linear-gradient(145deg, rgba(76, 55, 30, 0.9), rgba(15, 23, 42, 0.95));
+        box-shadow: var(--shadow);
+      }
+
+      .delegation-zone,
+      .rules-topology .delegation-zone {
+        border-color: rgba(163, 176, 191, 0.28);
+        background: linear-gradient(180deg, rgba(26, 39, 57, 0.82), rgba(18, 29, 43, 0.82));
+      }
+
+      .architecture-stage,
+      .agent-visual {
+        border-color: var(--line);
+        box-shadow: var(--shadow);
+      }
+
+      .eyebrow::before,
+      .live-dot,
+      .subagent-card::before,
+      .rules-topology .subagent-card::before {
+        box-shadow: none;
+      }
+
+      .tag,
+      .shared-foundation,
+      .architecture-caption,
+      .demo-footer {
+        background: linear-gradient(90deg, rgba(31, 47, 68, 0.9), rgba(23, 36, 54, 0.9));
+        border-color: var(--line);
+      }
+
+      .agent-pill,
+      .arch-label {
+        border-color: var(--line);
+        background: rgba(20, 32, 48, 0.94);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+      }
+
+      .hero-promise,
+      .principle-card,
+      .policy-flip,
+      .zero-llm,
+      .live-badge {
+        box-shadow: none;
+      }
+
+      @media (max-width: 1100px) {
+        .slide { padding: 28px; }
+        .football-slide { padding: 22px 34px; }
+        .borrower-stories { gap: 12px; }
+        .borrower-sequence { grid-template-columns: minmax(120px, 0.26fr) minmax(0, 1fr); gap: 12px 18px; }
+        .borrower-story { padding: 14px 18px; }
+        .visual-journey { gap: 18px; }
+        .mode-grid { grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr); gap: 10px; }
+        .mode-card { padding: 20px; }
+        .bottleneck-grid { grid-template-columns: minmax(0, 1fr); }
+        .bottleneck-map { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+        .bottleneck-panel { display: none; }
+        .arch-label { width: 180px; padding: 8px 9px; font-size: 10px; }
+        .agent-layout { grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr); gap: 18px; }
+        .agent-pill { max-width: 150px; padding: 7px 8px; font-size: 9px; }
+        .demo-card { padding: 18px; }
+        .coverage-grid { grid-template-columns: minmax(0, 1.35fr) minmax(250px, 0.65fr); gap: 14px; }
+        .persona-table th, .persona-table td { padding: 10px; }
+      }
+
+      @media (max-width: 760px) {
+        .slide { padding: 18px; }
+        .football-slide { padding: 24px; }
+        .borrower-sequence { grid-template-columns: 100px minmax(0, 1fr); gap: 10px; }
+        .borrower-story { padding: 12px; }
+        .borrower-heading .lede, .micro-line, .visual-card span { display: none; }
+        .visual-journey { gap: 6px; }
+        .visual-arrow { width: 14px; }
+        .visual-card { padding: 8px; }
+        .mode-grid { grid-template-columns: 1fr; grid-template-rows: 1fr auto 1fr; }
+        .mode-divider { grid-template-columns: 1fr auto 1fr; gap: 8px; }
+        .mode-divider::before, .mode-divider::after { width: 100%; height: 1px; }
+        .flow-list { display: none; }
+        .bottleneck-map { grid-template-columns: 1fr; }
+        .bottleneck-stage,
+        .bottleneck-stage:nth-child(4),
+        .bottleneck-stage:nth-child(5) { grid-column: auto; min-height: auto; }
+        .bottleneck-stage p, .bottleneck-decision { display: none; }
+        .agent-layout, .coverage-grid { grid-template-columns: 1fr; }
+        .agent-visual { min-height: 42vh; }
+        .agent-copy .lede, .principle-card { display: none; }
+        .demo-grid { grid-template-columns: 1fr; }
+        .demo-card p { display: none; }
+        .persona-table th:nth-child(2), .persona-table td:nth-child(2), .controls-stack { display: none; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.001ms !important;
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+        }
+      }
+
+      @media print {
+        html,
+        body {
+          height: auto;
+          overflow: visible;
+          background: #fff;
+        }
+
+        .deck {
+          height: auto;
+        }
+
+        .slide {
+          position: relative;
+          display: grid !important;
+          width: 100vw;
+          height: 56.25vw;
+          max-height: 100vh;
+          page-break-after: always;
+          visibility: visible !important;
+          opacity: 1 !important;
+          transform: none !important;
+        }
+
+      }
+    </style>
+  </head>
+  <body>
+    <main class="deck" aria-live="polite">
+      <section class="slide hero-slide is-active" id="slide-1" data-title="Credit Genie" data-duration="25" aria-hidden="false">
+        <img class="slide-bg" src="assets/01-hero-credit-genie.png" alt="Credit Genie presentation background" />
+        <div class="slide-content hero-copy">
+          <p class="eyebrow">Team</p>
+          <h1>Credit Genie</h1>
+          <p class="lede">Agentic AI Build Week 2026 · GoTyme Use Case 7</p>
+          <p class="lede track-name">Agentic credit decision engine: explainable, real-time underwriting across personal loans and BNPL</p>
+        </div>
+      </section>
+
+      <section class="slide football-slide" id="slide-2" data-title="" data-duration="30" aria-hidden="true">
+        <div class="borrower-stories" role="group" aria-label="Two broken credit journeys">
+          <div class="borrower-sequence">
+            <figure class="football-portrait ronaldo-image" data-reveal-step="1">
+              <img src="assets/1330603286208.webp" alt="Cristiano Ronaldo" />
+            </figure>
+            <article class="borrower-story personal-loan ronaldo-story" data-reveal-step="2">
+              <span class="borrower-label">Adam · Personal Loan</span>
+              <div class="visual-journey" aria-label="Personal loan journey">
+                <div class="visual-card">
+                  <img class="visual-image" src="assets/house.webp" alt="" aria-hidden="true" />
+                  <strong>Buy a house</strong>
+                  <span>needs loan</span>
+                </div>
+                <i class="visual-arrow" aria-hidden="true"><svg viewBox="0 0 64 64" focusable="false"><path d="M8 32h40" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M35 16l16 16-16 16" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
+                <div class="visual-card">
+                  <i class="visual-symbol docs-symbol" aria-hidden="true"></i>
+                  <strong>Paperwork</strong>
+                  <span>manual review</span>
+                </div>
+                <i class="visual-arrow" aria-hidden="true"><svg viewBox="0 0 64 64" focusable="false"><path d="M8 32h40" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M35 16l16 16-16 16" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
+                <div class="visual-card">
+                  <i class="visual-symbol clock-symbol" aria-hidden="true"></i>
+                  <strong>Waiting</strong>
+                  <span>unclear status</span>
+                </div>
+              </div>
+              <p class="micro-line">Personal Loan: document-heavy, slow, hard to track.</p>
+              <p class="pain-point">Too many steps. Too much waiting.</p>
+            </article>
+            <figure class="football-portrait messi-image" data-reveal-step="3">
+              <img src="assets/Lionel_Messi_White_House_2026_(3x4_cropped).jpg.webp" alt="Lionel Messi" />
+            </figure>
+            <article class="borrower-story bnpl messi-story" data-reveal-step="4">
+              <span class="borrower-label">Selena · BNPL</span>
+              <div class="visual-journey" aria-label="BNPL journey">
+                <div class="visual-card">
+                  <img class="visual-image mobile-image" src="assets/mobile.webp" alt="" aria-hidden="true" />
+                  <strong>Buy phone</strong>
+                  <span>installments</span>
+                </div>
+                <i class="visual-arrow" aria-hidden="true"><svg viewBox="0 0 64 64" focusable="false"><path d="M8 32h40" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M35 16l16 16-16 16" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
+                <div class="visual-card">
+                  <i class="visual-symbol decline-symbol" aria-hidden="true"></i>
+                  <strong>Declined</strong>
+                  <span>instant result</span>
+                </div>
+                <i class="visual-arrow" aria-hidden="true"><svg viewBox="0 0 64 64" focusable="false"><path d="M8 32h40" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M35 16l16 16-16 16" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
+                <div class="visual-card">
+                  <i class="visual-symbol question-symbol" aria-hidden="true"></i>
+                  <strong>No reason</strong>
+                  <span>zero context</span>
+                </div>
+              </div>
+              <p class="micro-line">BNPL: immediate decision, but no explanation.</p>
+              <p class="pain-point">Fast decision. Zero transparency.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-3" data-title="Decision bottlenecks" data-duration="25" aria-hidden="true">
+        <span class="section-number">03 / BOTTLENECK</span>
+        <div class="slide-content bottleneck-layout">
+          <header class="slide-heading">
+            <div>
+              <p class="eyebrow">Problem statement → user story</p>
+              <h2>Key bottlenecks</h2>
+            </div>
+            <p class="heading-kicker">The problem is not only approval speed. It is making every decision clear, governed, and auditable.</p>
+          </header>
+          <div class="bottleneck-grid">
+            <div class="bottleneck-map" aria-label="Credit decision bottlenecks from the problem statement">
+              <article class="bottleneck-stage">
+                <span class="stage-time">Policy</span>
+                <strong>Scattered rules</strong>
+                <span class="stage-mode">hard to update</span>
+              </article>
+              <article class="bottleneck-stage">
+                <span class="stage-time">Review</span>
+                <strong>Manual queues</strong>
+                <span class="stage-mode">slow review</span>
+              </article>
+              <article class="bottleneck-stage">
+                <span class="stage-time">Reasoning</span>
+                <strong>Vague decisions</strong>
+                <span class="stage-mode">unclear rationale</span>
+              </article>
+              <article class="bottleneck-stage">
+                <span class="stage-time">Privacy</span>
+                <strong>Explainability vs confidentiality</strong>
+                <span class="stage-mode">scoped disclosure</span>
+              </article>
+              <article class="bottleneck-stage">
+                <span class="stage-time">Risk</span>
+                <strong>Fraud + credit checks</strong>
+                <span class="stage-mode">under 2 seconds</span>
+              </article>
+            </div>
+          </div>
+          <div class="bottleneck-decision">
+            <strong>Human in the loop</strong>
+            <span>approve · decline · refer</span>
+            <strong>Decision lineage</strong>
+          </div>
+        </div>
+        <div class="speaker-notes">
+          <p>There are five bottlenecks: scattered policy, manual queues, vague decisions, the tension between explanation and confidentiality, and reliable fraud and credit checks under BNPL latency.</p>
+          <p>The target is not just faster approval. The target is approve, decline, or refer with clear rationale and decision lineage, while humans stay in the loop for policy changes, referrals, and overrides.</p>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-4" data-title="Personal Loan — agentic full path" data-duration="15" aria-hidden="true">
+        <span class="section-number">04 / PERSONAL LOAN</span>
+        <div class="slide-content path-layout">
+          <header class="slide-heading">
+            <div>
+              <p class="eyebrow">Full path</p>
+              <h2>High level architecture</h2>
+            </div>
+          </header>
+          <div class="agent-topology" aria-label="Personal Loan architecture with one orchestrator agent and three subagents">
+            <div class="topology-column">
+              <div class="source-node"><strong>React Dashboard</strong><span>POST /decide · SSE pipeline stream</span></div>
+              <div class="source-node"><strong>Filesystem Backend</strong><span>Evidence · active policy · skills · memory</span></div>
+            </div>
+            <article class="orchestrator-node">
+              <span class="orchestrator-badge">Main Agent</span>
+              <h3>Orchestrator Agent</h3>
+              <p>Owns the task plan, scopes context, delegates work, and controls the 60-second budget.</p>
+              <ul class="orchestrator-features">
+                <li>Planning + context management</li>
+                <li>Parallel delegation</li>
+                <li>Consensus + REFER escalation</li>
+                <li>SSE events + lineage</li>
+              </ul>
+            </article>
+            <div class="delegation-zone">
+              <span class="delegation-title">subagents=[] · scoped delegation</span>
+              <article class="subagent-card"><strong>Eligibility Subagent</strong><span>Rules-only minimum criteria and hard gate</span></article>
+              <article class="subagent-card"><strong>Affordability Subagent</strong><span>LLM reasoning · DTI · income stability · transactions</span></article>
+              <article class="subagent-card"><strong>Risk Subagent</strong><span>Hybrid risk assessment · exposure · delinquency <b class="challenge-chip">challenges affordability</b></span></article>
+            </div>
+            <div class="topology-column">
+              <div class="tool-node"><strong>Scoring Tools</strong><span>Hard rules · weights · thresholds</span></div>
+              <div class="tool-node"><strong>Explanation Tool</strong><span>Customer · reviewer · audit views</span></div>
+              <div class="tool-node"><strong>Decision Ledger</strong><span>Policy hash · evidence refs · timing</span></div>
+            </div>
+          </div>
+          <div class="architecture-caption">
+            <strong>Deep Agents harness</strong>
+            <span>1 Orchestrator Agent</span>
+            <span>3 subagents</span>
+            <span>skills loaded on demand</span>
+            <span>deterministic scoring tools</span>
+          </div>
+        </div>
+        <div class="speaker-notes">
+          <p>The Personal Loan path is organized around one Main Agent: the Orchestrator.</p>
+          <p>It owns planning, context management, timing, and the visible SSE stream. It delegates scoped work to Eligibility, Affordability, and Risk subagents. Eligibility remains rules-only; Affordability and Risk use bounded reasoning and can challenge each other.</p>
+          <p>The subagents return assessments to the Orchestrator. The Orchestrator then calls deterministic scoring and explanation tools, records the full lineage, and escalates unresolved disagreement to REFER.</p>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-5" data-title="BNPL — orchestrated fast path" data-duration="15" aria-hidden="true">
+        <span class="section-number">05 / BNPL</span>
+        <div class="slide-content path-layout">
+          <header class="slide-heading">
+            <div>
+              <p class="eyebrow">Fast path</p>
+              <h2>High level architecture</h2>
+            </div>
+          </header>
+          <div class="agent-topology rules-topology" aria-label="BNPL architecture with one orchestrator agent and three rules-only subagents">
+            <div class="topology-column">
+              <div class="source-node"><strong>BNPL Request</strong><span>Applicant · product · transaction context</span></div>
+              <div class="source-node"><strong>Cached Evidence</strong><span>Shared schema · active YAML policy</span></div>
+            </div>
+            <article class="orchestrator-node">
+              <span class="orchestrator-badge">Main Agent · fast mode</span>
+              <h3>Orchestrator Agent</h3>
+              <p>Selects the fast path, fans rules out in parallel, and assembles one auditable result.</p>
+              <ul class="orchestrator-features">
+                <li>2-second execution budget</li>
+                <li>Parallel rules delegation</li>
+                <li>No collaboration round</li>
+                <li>Same lineage contract</li>
+              </ul>
+            </article>
+            <div class="delegation-zone">
+              <span class="delegation-title">Rules-only subagents · parallel</span>
+              <article class="subagent-card"><strong>Eligibility Subagent</strong><span>Score band · credit history · minimum criteria</span></article>
+              <article class="subagent-card"><strong>Affordability Subagent</strong><span>Deterministic DTI anchor · current obligations</span></article>
+              <article class="subagent-card"><strong>Risk Subagent</strong><span>Exposure · utilization · BNPL stacking · delinquency</span></article>
+            </div>
+            <div class="topology-column">
+              <div class="tool-node"><strong>Scoring Tool</strong><span>Weights · thresholds · reason code</span></div>
+              <div class="tool-node"><strong>Template Explain</strong><span>No generation latency</span></div>
+              <div class="tool-node"><strong>Decision Ledger</strong><span>Same policy + evidence lineage</span></div>
+            </div>
+          </div>
+          <div class="architecture-caption">
+            <strong>Fast-path contract</strong>
+            <span>1 Orchestrator Agent</span>
+            <span>3 rules-only subagents</span>
+            <span>no LLM</span>
+            <span>no collaboration</span>
+          </div>
+        </div>
+        <div class="speaker-notes">
+          <p>BNPL keeps the same Orchestrator-and-subagent structure, but switches every delegated assessment to rules-only mode.</p>
+          <p>The Orchestrator fans eligibility, affordability, and risk checks out in parallel. These subagents do not call an LLM and do not run a collaboration round. They return deterministic results immediately.</p>
+          <p>The Orchestrator passes those results through scoring and template explanation tools, then writes the same audit-lineage format—all within the two-second budget.</p>
+        </div>
+      </section>
+
+      <section class="slide mermaid-slide" id="slide-6" data-title="Architecture.md — Mermaid overview" data-duration="15" aria-hidden="true">
+        <div class="slide-content mermaid-layout">
+          <div class="mermaid-frame" id="architecture-mermaid-frame">
+            <div class="mermaid-output" id="mermaid-output" role="img" aria-label="Credit Genie high-level Mermaid architecture"></div>
+            <div class="mermaid-fallback">
+              <strong>Mermaid architecture</strong>
+              <p>Frontend → Main Agent / Orchestrator → Eligibility, Affordability, and Risk subagents → custom tools → filesystem backend. Mermaid requires the bundled web module to render this diagram.</p>
+            </div>
+          </div>
+          <script type="text/plain" id="architecture-mermaid-source">
+graph TB
+    subgraph Frontend["Frontend - React + Vite"]
+        UI["Decision Dashboard"]
+        PipelineViz["Pipeline Visualization"]
+        AgentChat["Agent Conversation Stream"]
+        PolicyEditor["Policy Editor"]
+    end
+
+    subgraph DeepAgents["Deep Agents Harness"]
+        Orchestrator["Main Agent - Orchestrator"]
+        Eligibility["Eligibility Agent"]
+        Affordability["Affordability Agent"]
+        Risk["Risk Agent"]
+        PolicySkill["Skill: credit-policy"]
+        EvidenceSkill["Skill: evidence-rules"]
+        ExplainSkill["Skill: explanation"]
+        Planning["Planning - TODO Tool"]
+        ContextMgmt["Context Management"]
+    end
+
+    subgraph Backend["Filesystem Backend"]
+        PolicyStore["policy YAML files"]
+        EvidenceStore["evidence per applicant"]
+        DecisionLedger["decisions JSON ledger"]
+        Memory["AGENTS.md - Persistent Memory"]
+    end
+
+    subgraph Tools["Custom Tools"]
+        EvidenceTools["Evidence Fetch Tools"]
+        ScoringTools["Scoring Tools"]
+        PolicyTools["Policy Management Tools"]
+        ExplainTools["Explanation Generator"]
+    end
+
+    UI -->|"SSE Stream"| Orchestrator
+    PolicyEditor -->|"PUT /policy"| PolicyTools
+    Orchestrator --> Eligibility
+    Orchestrator --> Affordability
+    Orchestrator --> Risk
+    Eligibility --> EvidenceTools
+    Affordability --> EvidenceTools
+    Risk --> EvidenceTools
+    Orchestrator --> ScoringTools
+    Orchestrator --> ExplainTools
+    EvidenceTools --> EvidenceStore
+    ScoringTools --> PolicyStore
+    PolicyTools --> PolicyStore
+    Orchestrator --> DecisionLedger
+    Orchestrator --> Memory
+    PolicySkill -.->|"loaded on demand"| Eligibility
+    EvidenceSkill -.->|"loaded on demand"| Affordability
+    ExplainSkill -.->|"loaded on demand"| Risk
+    Planning -.-> Orchestrator
+    ContextMgmt -.-> Orchestrator
+          </script>
+        </div>
+        <div class="speaker-notes">
+          <p>This is the architecture directly from our architecture document.</p>
+          <p>The React dashboard streams into one Main Agent—the Orchestrator. The Orchestrator delegates to Eligibility, Affordability, and Risk agents, calls deterministic scoring and explanation tools, and writes the decision lineage to the filesystem backend.</p>
+          <p>Skills, planning, and context management support the Orchestrator and subagents without replacing the deterministic decision controls.</p>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-7" data-title="High-level architecture" data-duration="30" aria-hidden="true">
+        <span class="section-number">07 / SHARED ARCHITECTURE</span>
+        <div class="slide-content architecture-layout">
+          <header class="slide-heading">
+            <div>
+              <p class="eyebrow">From request to traceable decision</p>
+              <h2>Intelligence at the edges.<br /><span class="accent-amber">Control at the center.</span></h2>
+            </div>
+          </header>
+          <figure class="architecture-stage" aria-label="Credit Genie high-level evidence and decision architecture">
+            <img src="assets/05-credit-genie-architecture.png" alt="Evidence sources flow through preparation and orchestration into decision outputs" />
+            <figcaption>
+              <div class="arch-label arch-sources"><strong>Sources</strong>Bureau · income · transactions · exposure · application · policy</div>
+              <div class="arch-label arch-prep"><strong>Ingest + prepare</strong>Fetch · mask PII · normalize · flatten · detect signals · preserve provenance</div>
+              <div class="arch-label arch-router"><strong>Mode router</strong>Product chooses Personal Loan full path or BNPL fast path</div>
+              <div class="arch-label arch-full"><strong>Personal Loan</strong>Gate → agents → challenge → consensus → deterministic score → explanation</div>
+              <div class="arch-label arch-fast"><strong>BNPL</strong>Rules-only evaluation → template explanation · no LLM on path</div>
+              <div class="arch-label arch-output"><strong>Output</strong>Decision · confidence · reason codes · refs · timing · lineage</div>
+            </figcaption>
+          </figure>
+        </div>
+        <div class="speaker-notes">
+          <p>The request enters with an applicant and a product.</p>
+          <p>First, the evidence collector fetches the mock bureau, income and transaction data, exposure, policy, and historic outcomes. The preparation layer masks sensitive fields, normalizes the evidence, builds a flat packet, and detects useful signals such as irregular deposits.</p>
+          <p>The mode router sends Personal Loans to the full path and BNPL to the fast path.</p>
+          <p>For Personal Loans, the eligibility gate applies deterministic minimum criteria first. Affordability and Risk then assess scoped evidence. The orchestrator applies hard rules, weights, thresholds, and consensus checks, then generates explanations from the same lineage.</p>
+          <p>For BNPL, the rules engine evaluates eligibility, affordability, risk, exposure, and stacking directly. No LLM is on that path.</p>
+          <p>Every result returns a decision, evidence references, timing, confidence, and audience-specific explanation. The Personal Loan path streams stages and agent messages to the UI.</p>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-8" data-title="What agentic means here" data-duration="35" aria-hidden="true">
+        <span class="section-number">08 / BOUNDED AGENCY</span>
+        <div class="slide-content agent-layout">
+          <figure class="agent-visual" aria-label="Bounded multi-agent collaboration around one application">
+            <img src="assets/06-multi-agent-case.png" alt="A central application connected to eligibility, affordability, risk, and explanation roles" />
+            <figcaption>
+              <div class="agent-pill pill-eligibility"><strong>Eligibility</strong>Rules-only minimum criteria and hard gate</div>
+              <div class="agent-pill pill-affordability"><strong>Affordability</strong>DTI · income stability · transaction patterns</div>
+              <div class="agent-pill pill-risk"><strong>Risk</strong>Delinquency · exposure · stacking · challenger</div>
+              <div class="agent-pill pill-orchestrator"><strong>Orchestrator</strong>Sequence · consensus · score · escalate</div>
+              <div class="agent-pill pill-explanation"><strong>Explanation</strong>Customer · reviewer · audit views</div>
+            </figcaption>
+          </figure>
+          <div class="agent-copy">
+            <p class="eyebrow">Agentic ≠ autonomous approval</p>
+            <h2>Narrow judgment.<br /><span class="accent-cyan">Deterministic control.</span></h2>
+            <ul class="agent-points">
+              <li><strong>Agents</strong> assess scoped evidence.</li>
+              <li><strong>Tools</strong> own rules, scoring, and thresholds.</li>
+              <li><strong>Conflict</strong> escalates to REFER.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="speaker-notes">
+          <p>Agentic does not mean letting one model decide everything.</p>
+          <p>Credit Genie has three decisioning roles. Eligibility is a rules-only gate. Affordability reasons about DTI, income stability, and bank-statement patterns. Risk checks delinquency, exposure, BNPL stacking, and fraud signals.</p>
+          <p>Risk can challenge Affordability. Affordability responds with a re-evaluation. If disagreement remains, the system escalates to REFER.</p>
+          <p>Python remains the deterministic orchestrator. It controls sequencing, timeouts, scoring, weights, thresholds, and consensus. Agents handle the narrow reasoning tasks where judgment adds value.</p>
+          <p>That separation gives us intelligence with reproducibility.</p>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-9" data-title="One-minute product demo" data-duration="60" aria-hidden="true">
+        <span class="section-number">09 / LIVE PROOF</span>
+        <div class="slide-content demo-layout">
+          <header class="demo-header">
+            <div>
+              <p class="eyebrow">One minute · three proof points</p>
+              <h2>Now, let’s see it <span class="accent-coral">decide.</span></h2>
+            </div>
+            <span class="live-badge"><span class="live-dot" aria-hidden="true"></span>Live demo</span>
+          </header>
+          <div class="demo-grid">
+            <article class="demo-card glass">
+              <span class="demo-time">00:06 → 00:39</span>
+              <h3>Raj Patel</h3>
+              <p>Irregular deposits create genuine disagreement. Risk challenges Affordability; the unresolved gap stays visible in lineage.</p>
+              <span class="outcome refer">REFER · conflicting signals</span>
+            </article>
+            <article class="demo-card glass">
+              <span class="demo-time">00:39 → 00:47</span>
+              <h3>Maria Santos</h3>
+              <p>Exposure across five BNPL providers triggers a deterministic hard rule—without an LLM call.</p>
+              <span class="outcome decline">DECLINE · over-exposed</span>
+            </article>
+            <article class="demo-card glass">
+              <span class="demo-time">00:47 → 00:58</span>
+              <h3>Aisha Mohammed</h3>
+              <p>Raise the Personal Loan DTI ceiling from 40% to 50% in YAML, activate it, and rerun without deployment.</p>
+              <span class="outcome approve">DECLINE → APPROVE</span>
+            </article>
+          </div>
+          <div class="demo-footer">
+            <span>Show one evidence citation, measured timing, and policy version on every result.</span>
+            <span>5 personas · intentional outcomes · 1 auditable engine</span>
+          </div>
+        </div>
+        <div class="speaker-notes">
+          <p>Here are five test personas. Each one is designed to prove a different decision path.</p>
+          <p>We start with Raj Patel. His declared income conflicts with irregular deposits, so this is a case where agents must disagree productively. The system ingests evidence, passes the eligibility gate, then runs Affordability and Risk with scoped context. Risk flags the deposit pattern and challenges the affordability assessment. The disagreement is preserved and produces REFER, with cited evidence instead of an unexplained score.</p>
+          <p>Now Maria uses BNPL. This path detects exposure across five providers with deterministic rules, no LLM call, and a decision under the two-second constraint.</p>
+          <p>Finally, Aisha is declined under policy v2.1 because her DTI is 45 percent and the ceiling is 40. We change the active YAML policy to a 50 percent ceiling, rerun without redeployment, and the result flips to APPROVE.</p>
+          <p>Five personas, five intentional outcomes, one auditable engine.</p>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-10" data-title="Test coverage and controls" data-duration="50" aria-hidden="true">
+        <span class="section-number">10 / CONTROLLED OUTCOMES</span>
+        <div class="slide-content coverage-layout">
+          <header class="slide-heading">
+            <div>
+              <p class="eyebrow">More than a happy path</p>
+              <h2>Five personas.<br /><span class="accent-cyan">Distinct control behavior.</span></h2>
+            </div>
+            <p class="heading-kicker">Every case is designed to prove a decision mode, safety mechanism, or runtime policy control.</p>
+          </header>
+          <div class="coverage-grid">
+            <div class="persona-table-wrap">
+              <table class="persona-table">
+                <thead><tr><th>Persona</th><th>Product</th><th>Outcome</th><th>What it proves</th></tr></thead>
+                <tbody>
+                  <tr><td class="persona-name">Sarah Chen</td><td class="persona-proof">PL + BNPL</td><td><span class="outcome-chip approve">APPROVE</span></td><td class="persona-proof">Happy paths across both modes</td></tr>
+                  <tr><td class="persona-name">Raj Patel</td><td class="persona-proof">Personal Loan</td><td><span class="outcome-chip refer">REFER</span></td><td class="persona-proof">Agent disagreement escalates safely</td></tr>
+                  <tr><td class="persona-name">Maria Santos</td><td class="persona-proof">BNPL</td><td><span class="outcome-chip decline">DECLINE</span></td><td class="persona-proof">Exposure hard rule, zero LLM calls</td></tr>
+                  <tr><td class="persona-name">James Wilson</td><td class="persona-proof">Personal Loan</td><td><span class="outcome-chip decline">DECLINE</span></td><td class="persona-proof">120-day delinquency hard rule</td></tr>
+                  <tr><td class="persona-name">Aisha Mohammed</td><td class="persona-proof">Personal Loan</td><td><span class="outcome-chip approve">DECLINE → APPROVE</span></td><td class="persona-proof">Runtime policy change without redeploy</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="controls-stack">
+              <div class="policy-flip">
+                <strong>Policy-as-YAML</strong>
+                <div class="policy-change">
+                  <div class="policy-version">v2.1<br />DTI 40%</div>
+                  <span>→</span>
+                  <div class="policy-version">v2.2<br />DTI 50%</div>
+                </div>
+              </div>
+              <ul class="control-list">
+                <li>Evidence scoped per agent</li>
+                <li>Sensitive fields masked</li>
+                <li>Rules and thresholds deterministic</li>
+                <li>25s reasoning + 30s explanation limits</li>
+                <li>BNPL path has zero LLM latency</li>
+                <li>Versioned policy + immutable lineage</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="speaker-notes">
+          <p>The test set covers more than a happy path.</p>
+          <p>Sarah Chen approves across Personal Loan and BNPL. Raj Patel refers from agent disagreement. Maria Santos declines from BNPL over-exposure. James Wilson declines from the 120-day delinquency hard rule. Aisha Mohammed changes from decline to approve after a runtime policy update.</p>
+          <p>The controls are explicit. Evidence is scoped per agent. Sensitive fields are masked. Rules and policy checks remain deterministic. Personal Loan agents run inside bounded timeouts: 25 seconds for reasoning and 30 seconds for explanation, within the 60-second product budget. BNPL avoids LLM latency completely and stays under 2 seconds.</p>
+          <p>Policy is versioned as YAML, decisions keep immutable lineage, and the UI streams the Personal Loan pipeline so reviewers can inspect what happened.</p>
+        </div>
+      </section>
+
+      <section class="slide closing-slide" id="slide-11" data-title="Close" data-duration="25" aria-hidden="true">
+        <img class="slide-bg" src="assets/07-outcomes-close.png" alt="Borrower, reviewer, and customer connected by a clear digital decision path" />
+        <span class="section-number">11 / CLOSE</span>
+        <div class="slide-content closing-copy">
+          <p class="eyebrow">Evidence · policy · judgment</p>
+          <h2>Make every credit decision <span class="accent-amber">easier to explain.</span></h2>
+          <p class="closing-statement">Credit is not only a score. It is a decision built from evidence, policy, and judgment.</p>
+          <div class="closing-values">
+            <span class="closing-value">Faster</span>
+            <span class="closing-value">Consistent</span>
+            <span class="closing-value">Explainable</span>
+          </div>
+        </div>
+        <div class="speaker-notes">
+          <p>Credit Genie turns scattered evidence into a structured decision path.</p>
+          <p>It gives Personal Loans enough reasoning depth without losing control. It gives BNPL the speed of deterministic rules. It makes policy changes visible, agent collaboration inspectable, and explanations traceable to evidence.</p>
+          <p>Credit is not only a score. It is a decision built from evidence, policy, and judgment.</p>
+          <p>Credit Genie makes that decision faster, more consistent, and easier to explain.</p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (() => {
+        const slides = Array.from(document.querySelectorAll(".slide"));
+        let currentIndex = 0;
+        let revealStep = 1;
+
+        function revealItemsFor(slide) {
+          const revealItems = Array.from(slide.querySelectorAll("[data-reveal-step]"));
+          if (!revealItems.length) return;
+
+          revealItems.forEach((item) => {
+            const step = Number(item.dataset.revealStep || 1);
+            item.classList.toggle("is-revealed", step <= revealStep);
+            item.setAttribute("aria-hidden", String(step > revealStep));
+          });
+        }
+
+        function revealCountFor(slide) {
+          return Math.max(0, ...Array.from(slide.querySelectorAll("[data-reveal-step]")).map((item) => Number(item.dataset.revealStep || 1)));
+        }
+
+        function showSlide(index, { updateHash = true } = {}) {
+          currentIndex = Math.max(0, Math.min(index, slides.length - 1));
+          revealStep = 1;
+
+          slides.forEach((slide, slideIndex) => {
+            const active = slideIndex === currentIndex;
+            slide.classList.toggle("is-active", active);
+            slide.setAttribute("aria-hidden", String(!active));
+          });
+
+          const slide = slides[currentIndex];
+          revealItemsFor(slide);
+
+          if (updateHash) {
+            history.replaceState(null, "", `#slide-${currentIndex + 1}`);
+          }
+        }
+
+        function stepSlide(delta) {
+          const slide = slides[currentIndex];
+          const revealCount = revealCountFor(slide);
+
+          if (delta > 0 && revealCount && revealStep < revealCount) {
+            revealStep += 1;
+            revealItemsFor(slide);
+            return;
+          }
+
+          if (delta < 0 && revealCount && revealStep > 1) {
+            revealStep -= 1;
+            revealItemsFor(slide);
+            return;
+          }
+
+          showSlide(currentIndex + delta);
+        }
+
+        function toggleFullscreen() {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen?.().catch(() => {});
+          } else {
+            document.exitFullscreen?.().catch(() => {});
+          }
+        }
+
+        function indexFromHash() {
+          const match = window.location.hash.match(/^#slide-(\d+)$/);
+          return match ? Number(match[1]) - 1 : 0;
+        }
+
+        function isInteractive(target) {
+          return target instanceof Element && Boolean(target.closest("button, a, input, select, textarea, [contenteditable='true']"));
+        }
+
+        document.addEventListener("keydown", (event) => {
+          if (isInteractive(event.target)) return;
+
+          const key = event.key.toLowerCase();
+          if (["arrowright", "pagedown", " "].includes(key)) {
+            event.preventDefault();
+            stepSlide(1);
+          } else if (["arrowleft", "pageup"].includes(key)) {
+            event.preventDefault();
+            stepSlide(-1);
+          } else if (key === "home") {
+            event.preventDefault();
+            showSlide(0);
+          } else if (key === "end") {
+            event.preventDefault();
+            showSlide(slides.length - 1);
+          } else if (key === "f") {
+            toggleFullscreen();
+          }
+        });
+
+        window.addEventListener("hashchange", () => showSlide(indexFromHash(), { updateHash: false }));
+        showSlide(indexFromHash(), { updateHash: !window.location.hash });
+      })();
+    </script>
+    <script type="module">
+      const mermaidFrame = document.getElementById("architecture-mermaid-frame");
+      const mermaidOutput = document.getElementById("mermaid-output");
+      const mermaidSource = document.getElementById("architecture-mermaid-source");
+
+      try {
+        const { default: mermaid } = await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs");
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: "base",
+          securityLevel: "strict",
+          fontFamily: "Avenir Next, Segoe UI, sans-serif",
+          flowchart: {
+            htmlLabels: true,
+            useMaxWidth: true,
+            curve: "basis",
+            nodeSpacing: 24,
+            rankSpacing: 34,
+          },
+          themeVariables: {
+            background: "#0c1420",
+            primaryColor: "#223247",
+            primaryTextColor: "#f3f4f4",
+            primaryBorderColor: "#a9c2d6",
+            lineColor: "#a9b6c2",
+            secondaryColor: "#39352f",
+            tertiaryColor: "#1a2736",
+            clusterBkg: "#151f2d",
+            clusterBorder: "#718092",
+            edgeLabelBackground: "#0c1420",
+            fontSize: "20px",
+          },
+        });
+
+        const { svg } = await mermaid.render("credit-genie-architecture-mermaid", mermaidSource.textContent.trim());
+        mermaidOutput.innerHTML = svg;
+        mermaidFrame.classList.add("is-rendered");
+        mermaidFrame.dataset.renderState = "rendered";
+      } catch {
+        mermaidFrame.dataset.renderState = "fallback";
+      }
+    </script>
+    <a class="icon-credit" href="https://www.flaticon.com/free-icons/next" title="next icons">Next icons created by Roundicons - Flaticon</a>
+  </body>
+</html>
