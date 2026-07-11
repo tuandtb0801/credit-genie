@@ -5,7 +5,7 @@ import { ApplicantPicker } from "../components/ApplicantPicker";
 import { DecisionCard } from "../components/DecisionCard";
 import { EvidencePanel } from "../components/EvidencePanel";
 import { PipelineViz } from "../components/PipelineViz";
-import type { Applicant, ApplicantEvidence, AgentMessage, DecisionRecord, PipelineStage, Product, StageName } from "../types";
+import type { Applicant, ApplicantEvidence, AgentMessage, AgentThinking, DecisionRecord, PipelineStage, Product, StageName } from "../types";
 
 const STAGE_ORDER: StageName[] = ["ingest", "reason", "score", "explain"];
 
@@ -19,6 +19,7 @@ export function Dashboard() {
   const [product, setProduct] = useState<Product>("personal_loan");
   const [stages, setStages] = useState<PipelineStage[]>(initialStages());
   const [messages, setMessages] = useState<AgentMessage[]>([]);
+  const [thinking, setThinking] = useState<AgentThinking[]>([]);
   const [record, setRecord] = useState<DecisionRecord | null>(null);
   const [evidence, setEvidence] = useState<ApplicantEvidence | null>(null);
   const [running, setRunning] = useState(false);
@@ -46,6 +47,7 @@ export function Dashboard() {
     if (applicant) setProduct(applicant.products[0]);
     setRecord(null);
     setMessages([]);
+    setThinking([]);
     setStages(initialStages());
     setError(null);
   }
@@ -56,6 +58,7 @@ export function Dashboard() {
     setError(null);
     setRecord(null);
     setMessages([]);
+    setThinking([]);
     setStages(initialStages());
 
     try {
@@ -71,12 +74,20 @@ export function Dashboard() {
           } else if (evt.event === "stage_complete") {
             const stage = evt.data.stage as StageName;
             setStages((prev) => prev.map((s) => (s.stage === stage ? { ...s, status: "done", timing_ms: evt.data.timing_ms as number } : s)));
+            setThinking([]);
+          } else if (evt.event === "agent_thinking") {
+            const t = evt.data as unknown as AgentThinking;
+            setThinking((prev) => [...prev.filter((p) => p.agent !== t.agent), t]);
           } else if (evt.event === "agent_message") {
-            setMessages((prev) => [...prev, evt.data as unknown as AgentMessage]);
+            const m = evt.data as unknown as AgentMessage;
+            setMessages((prev) => [...prev, m]);
+            setThinking((prev) => prev.filter((p) => p.agent !== m.from_agent));
           } else if (evt.event === "decision_made") {
             setRecord(evt.data as unknown as DecisionRecord);
+            setThinking([]);
           } else if (evt.event === "error") {
             setError((evt.data.message as string) ?? "Decision failed.");
+            setThinking([]);
           }
         });
       }
@@ -119,7 +130,7 @@ export function Dashboard() {
         {product === "personal_loan" && (
           <section>
             <h2 className="mb-2 font-mono text-[11px] uppercase tracking-wide text-ink-muted">Agent Conversation</h2>
-            <AgentConversation messages={messages} />
+            <AgentConversation messages={messages} thinking={thinking} />
           </section>
         )}
 

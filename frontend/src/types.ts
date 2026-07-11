@@ -16,6 +16,12 @@ export interface Factor {
   impact: "positive" | "negative" | "neutral";
 }
 
+/** A live "agent is working" indicator streamed before each LLM stage completes. */
+export interface AgentThinking {
+  agent: string;
+  note: string;
+}
+
 export interface AgentMessage {
   from_agent: string;
   to_agent: string | null;

@@ -1,9 +1,9 @@
 version: '2.3'
-effective_date: '2026-07-11'
-status: active
-approved_by: risk-approver@credit-genie
-change_reason: 'Agent-drafted rule from analyst intent: "Reject anyone has credit
-  history below 31"'
+effective_date: null
+status: draft
+approved_by: null
+change_reason: 'Agent-drafted rule from analyst intent: "reject all client that have
+  low income than 1000"'
 segments:
   personal_loan:
     mode: full
@@ -88,10 +88,11 @@ hard_rules:
   applies_to:
   - bnpl
 - id: HR-005
-  description: Decline any applicant whose credit history length is below 31 months.
-  condition: credit_history_months < 31.0
+  description: Decline any application where verified monthly income is less than
+    1000 dollars.
+  condition: monthly_income < 1000.0
   action: DECLINE
-  reason_code: INSUFFICIENT_CREDIT_HISTORY
+  reason_code: INSUFFICIENT_INCOME
   applies_to:
   - personal_loan
   - bnpl
@@ -105,4 +106,3 @@ consensus:
   max_score_gap: 0.4
   min_confidence: 0.6
 drafted_by: rule-agent on behalf of risk-analyst@credit-genie
-activated_at: '2026-07-11T15:17:48.472596+00:00'
