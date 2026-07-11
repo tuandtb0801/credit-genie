@@ -1,7 +1,13 @@
-import type { Applicant, DecisionRecord, Policy, PolicyDraft, SimulateResult } from "../types";
+import type { Applicant, ApplicantEvidence, BacktestResult, DecisionRecord, Policy, PolicyDraft, SimulateResult } from "../types";
 
 export async function fetchApplicants(): Promise<Applicant[]> {
   const res = await fetch("/api/applicants");
+  return res.json();
+}
+
+export async function fetchApplicantEvidence(applicantId: string): Promise<ApplicantEvidence> {
+  const res = await fetch(`/api/applicants/${encodeURIComponent(applicantId)}/evidence`);
+  if (!res.ok) throw new Error(`Evidence fetch failed: ${res.status}`);
   return res.json();
 }
 
@@ -81,6 +87,41 @@ export async function simulatePolicy(filename: string, product: string): Promise
     body: JSON.stringify({ filename, product }),
   });
   if (!res.ok) throw new Error(`Simulate failed: ${res.status}`);
+  return res.json();
+}
+
+export interface DraftRuleResult {
+  created: boolean;
+  refused?: boolean;
+  refusal_reason?: string;
+  filename?: string;
+  version?: string;
+  rule?: { id: string; description: string; condition: string; action: string; reason_code: string; applies_to: string[] };
+  impact?: Record<string, number> | null;
+  warnings?: string[];
+  errors: string[];
+}
+
+export async function draftRule(intent: string, requestedBy: string): Promise<DraftRuleResult> {
+  const res = await fetch("/api/policy/draft-rule", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ intent, requested_by: requestedBy }),
+  });
+  if (!res.ok) {
+    const detail = await res.json().then((b) => b.detail).catch(() => null);
+    throw new Error(typeof detail === "string" ? detail : `Rule drafting failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function backtestPolicy(filename: string, product: string): Promise<BacktestResult> {
+  const res = await fetch("/api/policy/backtest", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename, product }),
+  });
+  if (!res.ok) throw new Error(`Back-test failed: ${res.status}`);
   return res.json();
 }
 

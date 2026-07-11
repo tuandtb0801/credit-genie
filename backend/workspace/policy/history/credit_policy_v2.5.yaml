@@ -1,0 +1,117 @@
+version: '2.5'
+effective_date: '2026-07-11'
+status: active
+approved_by: mario@credit-genie
+change_reason: 'Agent-drafted rule from analyst intent: "Below average credit score
+  but very high income should be favored as approved"'
+segments:
+  personal_loan:
+    mode: full
+    time_budget_ms: 60000
+    scoring:
+      weights:
+        eligibility: 0.25
+        affordability: 0.4
+        risk: 0.35
+      thresholds:
+        approve: 0.7
+        decline: 0.35
+    features:
+      llm_reasoning: true
+      agent_collaboration: true
+      multi_pass_evidence: true
+    eligibility:
+      min_score_band: fair
+      min_credit_history_months: 6
+    affordability:
+      dti_decline_ceiling: 0.4
+    risk:
+      max_bnpl_stacking: 3
+      max_utilization: 0.8
+  bnpl:
+    mode: fast
+    time_budget_ms: 2000
+    scoring:
+      weights:
+        eligibility: 0.3
+        affordability: 0.35
+        risk: 0.35
+      thresholds:
+        approve: 0.75
+        decline: 0.4
+    features:
+      llm_reasoning: false
+      agent_collaboration: false
+      multi_pass_evidence: false
+    eligibility:
+      min_score_band: fair
+      min_credit_history_months: 6
+    affordability:
+      dti_decline_ceiling: 0.35
+    risk:
+      max_bnpl_stacking: 3
+      max_utilization: 0.8
+hard_rules:
+- id: HR-001
+  description: "Decline applicants with a payment 90 or more days past due \u2014\
+    \ severe delinquency."
+  condition: max_dpd >= 90
+  action: DECLINE
+  reason_code: SEVERE_DELINQUENCY
+  applies_to:
+  - personal_loan
+  - bnpl
+- id: HR-002
+  description: Decline when monthly obligations exceed the segment's debt-to-income
+    ceiling.
+  condition: dti_ratio > affordability.dti_decline_ceiling
+  action: DECLINE
+  reason_code: UNAFFORDABLE
+  applies_to:
+  - personal_loan
+  - bnpl
+- id: HR-003
+  description: "Refer applicants whose credit history is shorter than the segment\
+    \ minimum \u2014 too thin to auto-decide."
+  condition: credit_history_months < eligibility.min_credit_history_months
+  action: REFER
+  reason_code: THIN_FILE
+  applies_to:
+  - personal_loan
+  - bnpl
+- id: HR-004
+  description: Decline BNPL checkouts when active BNPL plans or utilization exceed
+    the stacking caps.
+  condition: bnpl_active_count > risk.max_bnpl_stacking or utilization_ratio > risk.max_utilization
+  action: DECLINE
+  reason_code: OVER_EXPOSED
+  applies_to:
+  - bnpl
+- id: HR-005
+  description: Decline any applicant whose credit history length is below 31 months.
+  condition: credit_history_months < 31.0
+  action: DECLINE
+  reason_code: INSUFFICIENT_CREDIT_HISTORY
+  applies_to:
+  - personal_loan
+  - bnpl
+- id: HR-007
+  description: If the applicant has a below-average credit score but very high income,
+    the case should be referred for potential approval rather than declined automatically.
+  condition: credit_score <= 650.0 and monthly_income >= 15000.0
+  action: REFER
+  reason_code: LOW_SCORE_OFFSET_BY_HIGH_INCOME
+  applies_to:
+  - personal_loan
+  - bnpl
+score_bands:
+  order:
+  - poor
+  - fair
+  - good
+  - excellent
+consensus:
+  max_score_gap: 0.4
+  min_confidence: 0.6
+drafted_by: rule-agent on behalf of risk-analyst@credit-genie
+activated_at: '2026-07-11T15:28:55.275490+00:00'

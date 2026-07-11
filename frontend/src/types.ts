@@ -57,6 +57,27 @@ export interface DecisionRecord {
   latency_ms: number | null;
 }
 
+export interface ApplicantEvidence {
+  applicant_id: string;
+  signals: {
+    credit_score: number | null;
+    score_band: string | null;
+    credit_history_months: number | null;
+    monthly_income: number;
+    monthly_obligations: number;
+    dti_ratio: number;
+    bnpl_active_count: number;
+    utilization_ratio: number;
+    total_exposure: number;
+    max_dpd: number;
+  };
+  income_verification_status: string;
+  employment_type: string;
+  deposit_pattern: { pattern: string; note: string };
+  bnpl_providers: string[];
+  sources: Record<string, { confidence: string | null; freshness_days: number | null }>;
+}
+
 export type StageName = "ingest" | "reason" | "score" | "explain";
 
 export interface PipelineStage {
@@ -84,7 +105,7 @@ export interface Policy {
   approved_by: string | null;
   change_reason: string;
   segments: Record<Product, PolicySegment>;
-  hard_rules: { id: string; condition: string; action: Outcome; reason_code: string; applies_to: Product[] }[];
+  hard_rules: { id: string; description?: string; condition: string; action: Outcome; reason_code: string; applies_to: Product[] }[];
 }
 
 export interface PolicyDraft {
@@ -93,6 +114,8 @@ export interface PolicyDraft {
   status: string;
   change_reason: string;
   drafted_by: string;
+  /** Draft forked from an older active policy — activating it would revert newer changes. */
+  stale: boolean;
 }
 
 export interface SimulateResultRow {
@@ -108,4 +131,38 @@ export interface SimulateResult {
   total: number;
   changed: number;
   results: SimulateResultRow[];
+}
+
+export interface BacktestMetrics {
+  total: number;
+  approval_rate: number;
+  decline_rate: number;
+  refer_rate: number;
+  approved_count: number;
+  approved_defaults: number;
+  bad_rate_among_approved: number | null;
+  expected_loss: number;
+  reason_codes: Record<string, number>;
+}
+
+export interface CalibrationBucket {
+  score_range: string;
+  count: number;
+  actual_default_rate: number | null;
+}
+
+export interface BacktestResult {
+  book: { size: number; seed: number; base_default_rate: number; lgd: number; caveat: string };
+  product: Product;
+  active_version: string;
+  draft_version: string;
+  active: BacktestMetrics;
+  draft: BacktestMetrics;
+  deltas: {
+    approval_rate: number | null;
+    bad_rate_among_approved: number | null;
+    expected_loss: number | null;
+    approved_count: number | null;
+  };
+  calibration: CalibrationBucket[];
 }

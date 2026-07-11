@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { decideBnpl, decidePersonalLoan, fetchApplicants } from "../api/client";
+import { decideBnpl, decidePersonalLoan, fetchApplicantEvidence, fetchApplicants } from "../api/client";
 import { AgentConversation } from "../components/AgentConversation";
 import { ApplicantPicker } from "../components/ApplicantPicker";
 import { DecisionCard } from "../components/DecisionCard";
+import { EvidencePanel } from "../components/EvidencePanel";
 import { PipelineViz } from "../components/PipelineViz";
-import type { Applicant, AgentMessage, DecisionRecord, PipelineStage, Product, StageName } from "../types";
+import type { Applicant, ApplicantEvidence, AgentMessage, DecisionRecord, PipelineStage, Product, StageName } from "../types";
 
 const STAGE_ORDER: StageName[] = ["ingest", "reason", "score", "explain"];
 
@@ -19,8 +20,15 @@ export function Dashboard() {
   const [stages, setStages] = useState<PipelineStage[]>(initialStages());
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [record, setRecord] = useState<DecisionRecord | null>(null);
+  const [evidence, setEvidence] = useState<ApplicantEvidence | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    setEvidence(null);
+    fetchApplicantEvidence(selectedId).then(setEvidence).catch(() => setEvidence(null));
+  }, [selectedId]);
 
   useEffect(() => {
     fetchApplicants().then((list) => {
@@ -94,6 +102,13 @@ export function Dashboard() {
       </aside>
 
       <main className="flex flex-col gap-5">
+        {evidence && (
+          <section>
+            <h2 className="mb-2 font-mono text-[11px] uppercase tracking-wide text-ink-muted">Evidence — what the rules &amp; agents cite</h2>
+            <EvidencePanel evidence={evidence} />
+          </section>
+        )}
+
         {product === "personal_loan" && (
           <section>
             <h2 className="mb-2 font-mono text-[11px] uppercase tracking-wide text-ink-muted">Pipeline</h2>

@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from app.config import APPLICANTS_PATH, POLICY_DRAFTS_ROOT
 from app.ledger import decision_lookup_by_applicant
 from app.tools import policy as policy_tools
+from app.tools.backtest import backtest_policy_change
 
 router = APIRouter(prefix="/api/policy")
 
@@ -56,6 +57,41 @@ def simulate(request: SimulateRequest) -> dict:
     return policy_tools.simulate_policy_change(request.filename, applicant_ids, request.product, decision_lookup_by_applicant())
 
 
+class DraftRuleRequest(BaseModel):
+    intent: str
+    requested_by: str
+
+
+@router.post("/draft-rule")
+def draft_rule(request: DraftRuleRequest) -> dict:
+    """Agent-draft a hard rule from plain English. Produces a governed draft — never touches the active policy."""
+    if not request.intent.strip():
+        raise HTTPException(status_code=400, detail="Intent must not be empty.")
+    from app.agents.rule_drafter import draft_rule_from_intent
+
+    try:
+        return draft_rule_from_intent(request.intent.strip(), request.requested_by)
+    except RuntimeError as exc:  # missing API key — agent unavailable, drafting stays manual
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+class BacktestRequest(BaseModel):
+    filename: str
+    product: str
+
+
+@router.post("/backtest")
+def backtest(request: BacktestRequest) -> dict:
+    """Replay the synthetic historic book under active vs draft policy — the risk cost of the change."""
+    path = POLICY_DRAFTS_ROOT / request.filename
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"Draft '{request.filename}' not found.")
+    try:
+        return backtest_policy_change(request.filename, request.product)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
 class ActivateRequest(BaseModel):
     filename: str
     approved_by: str
@@ -66,7 +102,10 @@ def activate(request: ActivateRequest) -> dict:
     errors = policy_tools.validate_policy(policy_tools.load_policy_file(POLICY_DRAFTS_ROOT / request.filename))
     if errors:
         raise HTTPException(status_code=400, detail={"message": "Draft failed validation.", "errors": errors})
-    return _clean(policy_tools.activate_policy(request.filename, request.approved_by))
+    try:
+        return _clean(policy_tools.activate_policy(request.filename, request.approved_by))
+    except ValueError as exc:  # stale draft — forked from an older active policy
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.post("/rollback")
