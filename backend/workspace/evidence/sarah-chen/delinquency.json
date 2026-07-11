@@ -1,0 +1,13 @@
+{
+  "applicant_id": "sarah-chen",
+  "max_dpd": 0,
+  "dpd_counts": {
+    "30": 0,
+    "60": 0,
+    "90": 0
+  },
+  "last_dpd_date": null,
+  "confidence": "verified",
+  "freshness_days": 1,
+  "source": "mock-delinquency-v1"
+}

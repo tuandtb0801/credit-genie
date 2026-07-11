@@ -1,0 +1,13 @@
+{
+  "applicant_id": "james-wilson",
+  "max_dpd": 120,
+  "dpd_counts": {
+    "30": 4,
+    "60": 2,
+    "90": 1
+  },
+  "last_dpd_date": "2026-04-02",
+  "confidence": "verified",
+  "freshness_days": 1,
+  "source": "mock-delinquency-v1"
+}

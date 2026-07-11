@@ -1,0 +1,28 @@
+{
+  "applicant_id": "raj-patel",
+  "monthly_income": 5000,
+  "employer": "Patel Consulting (self-employed)",
+  "employment_type": "self_employed",
+  "monthly_obligations": 1900,
+  "bank_statement_transactions": [
+    {
+      "date": "2026-06-25",
+      "amount": 5600,
+      "label": "transfer"
+    },
+    {
+      "date": "2026-06-11",
+      "amount": 4200,
+      "label": "transfer"
+    },
+    {
+      "date": "2026-05-29",
+      "amount": 6100,
+      "label": "transfer"
+    }
+  ],
+  "income_verification_status": "declared",
+  "confidence": "declared",
+  "freshness_days": 4,
+  "source": "mock-income-v1"
+}

@@ -1,0 +1,23 @@
+{
+  "applicant_id": "maria-santos",
+  "monthly_income": 3200,
+  "employer": "Coastal Retail Group",
+  "employment_type": "salaried",
+  "monthly_obligations": 900,
+  "bank_statement_transactions": [
+    {
+      "date": "2026-06-27",
+      "amount": 1600,
+      "label": "payroll deposit - coastal retail group"
+    },
+    {
+      "date": "2026-06-13",
+      "amount": 1600,
+      "label": "payroll deposit - coastal retail group"
+    }
+  ],
+  "income_verification_status": "verified",
+  "confidence": "verified",
+  "freshness_days": 6,
+  "source": "mock-income-v1"
+}

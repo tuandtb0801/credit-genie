@@ -1,0 +1,17 @@
+{
+  "applicant_id": "maria-santos",
+  "total_exposure": 4800,
+  "bnpl_active_count": 5,
+  "bnpl_providers": [
+    "PaySplit",
+    "QuickPay",
+    "FlexBuy",
+    "ZipCredit",
+    "LoanNow"
+  ],
+  "other_loan_obligations": 1450,
+  "utilization_ratio": 0.92,
+  "confidence": "verified",
+  "freshness_days": 0,
+  "source": "mock-exposure-v1"
+}

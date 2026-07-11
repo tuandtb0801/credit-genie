@@ -1,0 +1,23 @@
+{
+  "applicant_id": "aisha-mohammed",
+  "monthly_income": 5200,
+  "employer": "Northbridge Design Studio",
+  "employment_type": "salaried",
+  "monthly_obligations": 2340,
+  "bank_statement_transactions": [
+    {
+      "date": "2026-06-28",
+      "amount": 2600,
+      "label": "payroll deposit - northbridge design studio"
+    },
+    {
+      "date": "2026-06-14",
+      "amount": 2600,
+      "label": "payroll deposit - northbridge design studio"
+    }
+  ],
+  "income_verification_status": "verified",
+  "confidence": "verified",
+  "freshness_days": 4,
+  "source": "mock-income-v1"
+}

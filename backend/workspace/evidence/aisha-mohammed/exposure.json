@@ -1,0 +1,13 @@
+{
+  "applicant_id": "aisha-mohammed",
+  "total_exposure": 9000,
+  "bnpl_active_count": 1,
+  "bnpl_providers": [
+    "PaySplit"
+  ],
+  "other_loan_obligations": 7500,
+  "utilization_ratio": 0.3,
+  "confidence": "verified",
+  "freshness_days": 1,
+  "source": "mock-exposure-v1"
+}

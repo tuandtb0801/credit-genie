@@ -1,0 +1,13 @@
+{
+  "applicant_id": "james-wilson",
+  "total_exposure": 12000,
+  "bnpl_active_count": 1,
+  "bnpl_providers": [
+    "QuickPay"
+  ],
+  "other_loan_obligations": 10500,
+  "utilization_ratio": 0.5,
+  "confidence": "verified",
+  "freshness_days": 1,
+  "source": "mock-exposure-v1"
+}

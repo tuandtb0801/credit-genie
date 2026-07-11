@@ -1,0 +1,23 @@
+{
+  "applicant_id": "james-wilson",
+  "monthly_income": 4100,
+  "employer": "Harborline Logistics",
+  "employment_type": "salaried",
+  "monthly_obligations": 1500,
+  "bank_statement_transactions": [
+    {
+      "date": "2026-06-26",
+      "amount": 2050,
+      "label": "payroll deposit - harborline logistics"
+    },
+    {
+      "date": "2026-06-12",
+      "amount": 2050,
+      "label": "payroll deposit - harborline logistics"
+    }
+  ],
+  "income_verification_status": "verified",
+  "confidence": "verified",
+  "freshness_days": 5,
+  "source": "mock-income-v1"
+}

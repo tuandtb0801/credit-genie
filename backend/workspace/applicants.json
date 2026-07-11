@@ -1,0 +1,37 @@
+[
+  {
+    "applicant_id": "sarah-chen",
+    "display_name": "Sarah Chen",
+    "products": ["personal_loan", "bnpl"],
+    "persona_note": "Happy path — clean bureau, stable salaried income, low exposure.",
+    "expected_outcome": "APPROVE"
+  },
+  {
+    "applicant_id": "raj-patel",
+    "display_name": "Raj Patel",
+    "products": ["personal_loan"],
+    "persona_note": "Self-employed, declared income contradicted by irregular deposits — agents disagree.",
+    "expected_outcome": "REFER"
+  },
+  {
+    "applicant_id": "maria-santos",
+    "display_name": "Maria Santos",
+    "products": ["bnpl"],
+    "persona_note": "Stacked across 5 BNPL providers, utilization over policy cap.",
+    "expected_outcome": "DECLINE"
+  },
+  {
+    "applicant_id": "james-wilson",
+    "display_name": "James Wilson",
+    "products": ["personal_loan"],
+    "persona_note": "120 days past due — severe delinquency hard rule.",
+    "expected_outcome": "DECLINE"
+  },
+  {
+    "applicant_id": "aisha-mohammed",
+    "display_name": "Aisha Mohammed",
+    "products": ["personal_loan"],
+    "persona_note": "DTI 45% — declines under the v2.1 policy's 40% ceiling, approves once the ceiling moves to 50% in v2.2.",
+    "expected_outcome": "DECLINE (v2.1) → APPROVE (v2.2)"
+  }
+]

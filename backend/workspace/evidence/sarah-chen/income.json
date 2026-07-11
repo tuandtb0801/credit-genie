@@ -1,0 +1,33 @@
+{
+  "applicant_id": "sarah-chen",
+  "monthly_income": 6200,
+  "employer": "Meridian Health Systems",
+  "employment_type": "salaried",
+  "monthly_obligations": 1100,
+  "bank_statement_transactions": [
+    {
+      "date": "2026-06-28",
+      "amount": 3100,
+      "label": "payroll deposit - meridian health"
+    },
+    {
+      "date": "2026-06-14",
+      "amount": 3100,
+      "label": "payroll deposit - meridian health"
+    },
+    {
+      "date": "2026-05-31",
+      "amount": 3100,
+      "label": "payroll deposit - meridian health"
+    },
+    {
+      "date": "2026-05-17",
+      "amount": 3100,
+      "label": "payroll deposit - meridian health"
+    }
+  ],
+  "income_verification_status": "verified",
+  "confidence": "verified",
+  "freshness_days": 5,
+  "source": "mock-income-v1"
+}

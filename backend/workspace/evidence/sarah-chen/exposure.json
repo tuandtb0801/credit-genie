@@ -1,0 +1,13 @@
+{
+  "applicant_id": "sarah-chen",
+  "total_exposure": 8000,
+  "bnpl_active_count": 1,
+  "bnpl_providers": [
+    "PaySplit"
+  ],
+  "other_loan_obligations": 6500,
+  "utilization_ratio": 0.15,
+  "confidence": "verified",
+  "freshness_days": 1,
+  "source": "mock-exposure-v1"
+}

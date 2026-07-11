@@ -1,0 +1,10 @@
+{
+  "applicant_id": "raj-patel",
+  "credit_score": 690,
+  "score_band": "good",
+  "credit_history_months": 48,
+  "delinquency_summary": "one minor late payment",
+  "confidence": "verified",
+  "freshness_days": 3,
+  "source": "mock-bureau-v1"
+}

@@ -1,0 +1,14 @@
+{
+  "applicant_id": "raj-patel",
+  "total_exposure": 15000,
+  "bnpl_active_count": 2,
+  "bnpl_providers": [
+    "QuickPay",
+    "FlexBuy"
+  ],
+  "other_loan_obligations": 9500,
+  "utilization_ratio": 0.35,
+  "confidence": "verified",
+  "freshness_days": 1,
+  "source": "mock-exposure-v1"
+}

@@ -1,0 +1,13 @@
+{
+  "applicant_id": "raj-patel",
+  "max_dpd": 15,
+  "dpd_counts": {
+    "30": 1,
+    "60": 0,
+    "90": 0
+  },
+  "last_dpd_date": "2026-04-02",
+  "confidence": "verified",
+  "freshness_days": 1,
+  "source": "mock-delinquency-v1"
+}
