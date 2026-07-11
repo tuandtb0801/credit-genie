@@ -1,0 +1,670 @@
+<title>Credit Genie — Architecture</title>
+<style>
+  :root {
+    --bg: #F6F7FA;
+    --surface: #FFFFFF;
+    --surface-2: #ECEFF4;
+    --border: #D6DBE3;
+    --text: #161B22;
+    --text-muted: #5B6472;
+    --accent: #2A46D6;
+    --accent-soft: #E7EBFB;
+    --approve: #1C9A52;
+    --approve-soft: #E4F6EC;
+    --decline: #D13B3B;
+    --decline-soft: #FBE6E6;
+    --refer: #B9770E;
+    --refer-soft: #FBF0DC;
+    --radius: 3px;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0E1218;
+      --surface: #161B24;
+      --surface-2: #1D2430;
+      --border: #2B3342;
+      --text: #E7EAF0;
+      --text-muted: #8E96A6;
+      --accent: #7086FF;
+      --accent-soft: rgba(112,134,255,0.14);
+      --approve: #4ADE80;
+      --approve-soft: rgba(74,222,128,0.12);
+      --decline: #F87171;
+      --decline-soft: rgba(248,113,113,0.12);
+      --refer: #FBBF24;
+      --refer-soft: rgba(251,191,36,0.12);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0E1218;
+    --surface: #161B24;
+    --surface-2: #1D2430;
+    --border: #2B3342;
+    --text: #E7EAF0;
+    --text-muted: #8E96A6;
+    --accent: #7086FF;
+    --accent-soft: rgba(112,134,255,0.14);
+    --approve: #4ADE80;
+    --approve-soft: rgba(74,222,128,0.12);
+    --decline: #F87171;
+    --decline-soft: rgba(248,113,113,0.12);
+    --refer: #FBBF24;
+    --refer-soft: rgba(251,191,36,0.12);
+  }
+  :root[data-theme="light"] {
+    --bg: #F6F7FA;
+    --surface: #FFFFFF;
+    --surface-2: #ECEFF4;
+    --border: #D6DBE3;
+    --text: #161B22;
+    --text-muted: #5B6472;
+    --accent: #2A46D6;
+    --accent-soft: #E7EBFB;
+    --approve: #1C9A52;
+    --approve-soft: #E4F6EC;
+    --decline: #D13B3B;
+    --decline-soft: #FBE6E6;
+    --refer: #B9770E;
+    --refer-soft: #FBF0DC;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-sans-serif, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  }
+
+  a { color: var(--accent); }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 40px 28px 96px;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 40px;
+  }
+  @media (max-width: 860px) {
+    .page { grid-template-columns: 1fr; }
+  }
+
+  /* ---- Header ---- */
+  .masthead {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 28px;
+    margin-bottom: 4px;
+  }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+  .dek {
+    font-size: 17px;
+    color: var(--text-muted);
+    max-width: 62ch;
+    margin: 0 0 18px;
+    text-wrap: balance;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .meta-pill {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px 9px;
+    background: var(--surface);
+  }
+
+  /* ---- Nav rail ---- */
+  nav.rail {
+    align-self: start;
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  @media (max-width: 860px) {
+    nav.rail {
+      position: static;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: -8px;
+    }
+  }
+  nav.rail a {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 6px 8px;
+    border-left: 2px solid transparent;
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  @media (max-width: 860px) {
+    nav.rail a {
+      border-left: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+  }
+  nav.rail a:hover {
+    color: var(--text);
+    border-left-color: var(--accent);
+    background: var(--surface-2);
+  }
+  nav.rail .rail-title {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 6px 8px 8px;
+  }
+
+  main { min-width: 0; }
+
+  section.block {
+    padding-top: 36px;
+    margin-top: 36px;
+    border-top: 1px solid var(--border);
+    scroll-margin-top: 20px;
+  }
+  section.block:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .section-note {
+    color: var(--text-muted);
+    font-size: 14px;
+    max-width: 68ch;
+    margin: 0 0 22px;
+  }
+  h3.sub {
+    font-size: 13px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 12px;
+  }
+
+  p.body-text { max-width: 68ch; }
+
+  /* ---- Legend ---- */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 18px 0 0;
+  }
+  .legend .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 5px 10px;
+    border-radius: var(--radius);
+  }
+  .legend .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .pill.approve { background: var(--approve-soft); color: var(--approve); }
+  .pill.approve .dot { background: var(--approve); }
+  .pill.decline { background: var(--decline-soft); color: var(--decline); }
+  .pill.decline .dot { background: var(--decline); }
+  .pill.refer { background: var(--refer-soft); color: var(--refer); }
+  .pill.refer .dot { background: var(--refer); }
+
+  /* ---- Diagram primitives ---- */
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    overflow-x: auto;
+  }
+  .node {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    text-align: center;
+  }
+  .node .label {
+    font-weight: 600;
+    font-size: 13.5px;
+  }
+  .node .sub {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+  .node.accent { border-color: var(--accent); background: var(--accent-soft); }
+  .node.accent .label { color: var(--accent); }
+  .node.outcome { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-weight: 700; font-size: 12.5px; letter-spacing: 0.03em; border: none; }
+  .node.approve { background: var(--approve-soft); color: var(--approve); }
+  .node.decline { background: var(--decline-soft); color: var(--decline); }
+  .node.refer { background: var(--refer-soft); color: var(--refer); }
+
+  .arrow-d { display: flex; justify-content: center; color: var(--text-muted); }
+  .arrow-d svg { display: block; }
+  .arrow-r { display: flex; align-items: center; color: var(--text-muted); flex: none; }
+
+  /* System map */
+  .sysmap { display: flex; flex-direction: column; align-items: center; gap: 0; min-width: 640px; }
+  .sysmap .tier { display: flex; gap: 14px; justify-content: center; flex-wrap: nowrap; width: 100%; }
+  .sysmap .tier .node { flex: 1; }
+  .sysmap .tier-label {
+    align-self: flex-start;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .sysmap .tier-wrap { width: 100%; }
+
+  /* Two paths */
+  .paths { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; min-width: 560px; }
+  @media (max-width: 640px) { .paths { grid-template-columns: 1fr; min-width: 0; } }
+  .path-col { display: flex; flex-direction: column; align-items: stretch; }
+  .path-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .path-head .name { font-weight: 700; font-size: 15px; }
+  .path-head .budget {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+  .stage {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+  }
+  .stage .num {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    width: 16px;
+    flex: none;
+  }
+  .stage .box {
+    flex: 1;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+  }
+  .stage .box .t { font-size: 13px; font-weight: 600; }
+  .stage .box .d { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .stage-link { display: flex; padding-left: 28px; color: var(--border); }
+  .stage-link svg { display: block; }
+
+  /* Decision logic */
+  .flow { display: flex; flex-direction: column; align-items: center; min-width: 460px; }
+  .flow .node { width: 100%; max-width: 380px; }
+  .branch-row {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+    max-width: 620px;
+    justify-content: center;
+    margin: 4px 0;
+  }
+  .branch {
+    flex: 1;
+    max-width: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .branch .cond {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 8px;
+    min-height: 28px;
+  }
+
+  /* Policy lifecycle */
+  .lifecycle { display: flex; align-items: center; min-width: 700px; }
+  .lifecycle .node { min-width: 108px; }
+  .rollback-note {
+    margin-top: 18px;
+    padding: 10px 14px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    font-size: 12.5px;
+    color: var(--text-muted);
+    max-width: 700px;
+  }
+  .rollback-note .mono { color: var(--decline); }
+
+  /* Storage / stack grid */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .stack-cell {
+    background: var(--surface);
+    padding: 16px 18px;
+  }
+  .stack-cell h4 {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  .stack-cell ul { margin: 0; padding: 0; list-style: none; }
+  .stack-cell li {
+    font-size: 13px;
+    padding: 4px 0;
+    color: var(--text);
+    border-top: 1px solid var(--border);
+  }
+  .stack-cell li:first-child { border-top: none; }
+  .stack-cell li .tag {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  footer {
+    grid-column: 1 / -1;
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+</style>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="arrow-down" viewBox="0 0 24 24">
+    <line x1="12" y1="1" x2="12" y2="17" stroke="currentColor" stroke-width="1.6"/>
+    <polygon points="12,23 6,14 18,14" fill="currentColor"/>
+  </symbol>
+  <symbol id="arrow-right" viewBox="0 0 24 24">
+    <line x1="1" y1="12" x2="17" y2="12" stroke="currentColor" stroke-width="1.6"/>
+    <polygon points="23,12 14,6 14,18" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">Architecture Overview</p>
+    <h1>Credit Genie</h1>
+    <p class="dek">An explainable underwriting agent that turns fragmented borrower evidence and changing credit policy into fast, consistent, auditable decisions — across personal loans and BNPL.</p>
+    <div class="meta-row">
+      <span class="meta-pill">Agentic AI Build Week 2026 · GoTyme Use Case 7</span>
+      <span class="meta-pill">deepagents + LangGraph + FastAPI</span>
+      <span class="meta-pill">No production integrations — mock evidence only</span>
+    </div>
+  </header>
+
+  <nav class="rail">
+    <span class="rail-title">Contents</span>
+    <a href="#sysmap">System map</a>
+    <a href="#paths">Two execution paths</a>
+    <a href="#logic">Decision logic</a>
+    <a href="#policy">Policy lifecycle</a>
+    <a href="#storage">Storage &amp; stack</a>
+  </nav>
+
+  <main>
+
+    <section class="block" id="sysmap">
+      <h2>System map</h2>
+      <p class="section-note">The frontend streams a decision request to a single orchestrator agent, which fans work out to three specialist agents. Every agent reads and writes through the same filesystem-backed store — there is no database.</p>
+
+      <div class="diagram">
+        <div class="sysmap">
+
+          <div class="tier-wrap">
+            <div class="tier-label">Frontend — React + Vite</div>
+            <div class="tier">
+              <div class="node"><div class="label">Decision Dashboard</div></div>
+              <div class="node"><div class="label">Pipeline Viz</div><div class="sub">SSE stream</div></div>
+              <div class="node"><div class="label">Agent Conversation</div></div>
+              <div class="node"><div class="label">Policy Editor</div></div>
+            </div>
+          </div>
+
+          <div class="arrow-d"><svg width="20" height="34"><use href="#arrow-down"/></svg></div>
+
+          <div class="tier-wrap">
+            <div class="tier-label">API</div>
+            <div class="tier">
+              <div class="node accent" style="max-width:320px;margin:0 auto;"><div class="label">Orchestrator Agent</div><div class="sub">FastAPI · SSE · plan &amp; delegate</div></div>
+            </div>
+          </div>
+
+          <div class="arrow-d"><svg width="20" height="34"><use href="#arrow-down"/></svg></div>
+
+          <div class="tier-wrap">
+            <div class="tier-label">Sub-agents — assess in parallel, then reconcile</div>
+            <div class="tier">
+              <div class="node"><div class="label">Eligibility</div><div class="sub">rules only</div></div>
+              <div class="node"><div class="label">Affordability</div><div class="sub">LLM reasoning</div></div>
+              <div class="node"><div class="label">Risk</div><div class="sub">hybrid rules + LLM</div></div>
+            </div>
+          </div>
+
+          <div class="arrow-d"><svg width="20" height="34"><use href="#arrow-down"/></svg></div>
+
+          <div class="tier-wrap">
+            <div class="tier-label">Storage — filesystem backend, no DB</div>
+            <div class="tier">
+              <div class="node"><div class="label">Policy YAML</div></div>
+              <div class="node"><div class="label">Evidence JSON</div></div>
+              <div class="node"><div class="label">Decision Ledger</div></div>
+              <div class="node"><div class="label">AGENTS.md</div><div class="sub">memory</div></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="paths">
+      <h2>Two execution paths, one policy</h2>
+      <p class="section-note">Personal loans and BNPL can't share a workflow — one needs room to reason, the other needs to finish before checkout does. Both read the same policy file and the same hard rules; only the depth of assessment changes.</p>
+
+      <div class="diagram">
+        <div class="paths">
+
+          <div class="path-col">
+            <div class="path-head"><span class="name">Personal Loan — full path</span><span class="budget mono">budget 60s</span></div>
+            <div class="stage"><span class="num mono">1</span><div class="box"><div class="t">Evidence ingest</div><div class="d">parallel fetch, all sources · ~2–3s</div></div></div>
+            <div class="stage-link"><svg width="14" height="20"><use href="#arrow-down"/></svg></div>
+            <div class="stage"><span class="num mono">2</span><div class="box"><div class="t">Eligibility gate</div><div class="d">rules only · ~50ms</div></div></div>
+            <div class="stage-link"><svg width="14" height="20"><use href="#arrow-down"/></svg></div>
+            <div class="stage"><span class="num mono">3</span><div class="box"><div class="t">Affordability + Risk</div><div class="d">parallel LLM reasoning · ~8–15s</div></div></div>
+            <div class="stage-link"><svg width="14" height="20"><use href="#arrow-down"/></svg></div>
+            <div class="stage"><span class="num mono">4</span><div class="box"><div class="t">Collaboration round</div><div class="d">agents challenge / respond · ~3–8s</div></div></div>
+            <div class="stage-link"><svg width="14" height="20"><use href="#arrow-down"/></svg></div>
+            <div class="stage"><span class="num mono">5</span><div class="box"><div class="t">Score + explain</div><div class="d">weighted score, LLM narrative · ~3–5s</div></div></div>
+          </div>
+
+          <div class="path-col">
+            <div class="path-head"><span class="name">BNPL — fast path</span><span class="budget mono">budget 2s</span></div>
+            <div class="stage"><span class="num mono">1</span><div class="box"><div class="t">Cached evidence lookup</div><div class="d">pre-computed · ~50–100ms</div></div></div>
+            <div class="stage-link"><svg width="14" height="20"><use href="#arrow-down"/></svg></div>
+            <div class="stage"><span class="num mono">2</span><div class="box"><div class="t">All rules, in parallel</div><div class="d">eligibility + affordability + risk, no LLM · ~30ms</div></div></div>
+            <div class="stage-link"><svg width="14" height="20"><use href="#arrow-down"/></svg></div>
+            <div class="stage"><span class="num mono">3</span><div class="box"><div class="t">Scoring</div><div class="d">deterministic · ~10ms</div></div></div>
+            <div class="stage-link"><svg width="14" height="20"><use href="#arrow-down"/></svg></div>
+            <div class="stage"><span class="num mono">4</span><div class="box"><div class="t">Template explanation</div><div class="d">reason codes filled from lineage · ~10ms</div></div></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="logic">
+      <h2>Decision logic</h2>
+      <p class="section-note">Hard rules always run first and can end the decision immediately. What survives them goes through a consensus check before it ever reaches a weighted score — disagreement between agents is a first-class reason to refer, not a bug to average away.</p>
+
+      <div class="legend">
+        <span class="pill approve"><span class="dot"></span>APPROVE</span>
+        <span class="pill decline"><span class="dot"></span>DECLINE</span>
+        <span class="pill refer"><span class="dot"></span>REFER</span>
+      </div>
+
+      <div class="diagram" style="margin-top:18px;">
+        <div class="flow">
+
+          <div class="node accent"><div class="label">Hard rules check</div><div class="sub">max_dpd, DTI ceiling, min credit history</div></div>
+          <div class="arrow-d"><svg width="18" height="28"><use href="#arrow-down"/></svg></div>
+
+          <div class="branch-row">
+            <div class="branch"><div class="cond mono">dpd ≥ 90</div><div class="node outcome decline">DECLINE</div></div>
+            <div class="branch"><div class="cond mono">DTI &gt; 60%</div><div class="node outcome decline">DECLINE</div></div>
+            <div class="branch"><div class="cond mono">history &lt; 6mo</div><div class="node outcome refer">REFER</div></div>
+            <div class="branch"><div class="cond mono">none triggered</div><div class="node" style="border-style:dashed;"><div class="sub" style="margin-top:0;">continue ↓</div></div></div>
+          </div>
+
+          <div class="arrow-d"><svg width="18" height="28"><use href="#arrow-down"/></svg></div>
+          <div class="node accent"><div class="label">Consensus check</div><div class="sub">do the agents agree?</div></div>
+          <div class="arrow-d"><svg width="18" height="28"><use href="#arrow-down"/></svg></div>
+
+          <div class="branch-row">
+            <div class="branch"><div class="cond mono">score gap &gt; 0.4<br/>or confidence &lt; 0.6</div><div class="node outcome refer">REFER</div></div>
+            <div class="branch"><div class="cond mono">agents aligned</div><div class="node" style="border-style:dashed;"><div class="sub" style="margin-top:0;">continue ↓</div></div></div>
+          </div>
+
+          <div class="arrow-d"><svg width="18" height="28"><use href="#arrow-down"/></svg></div>
+          <div class="node accent"><div class="label">Weighted score</div><div class="sub mono">score = Σ weight_i × agent_score_i</div></div>
+          <div class="arrow-d"><svg width="18" height="28"><use href="#arrow-down"/></svg></div>
+
+          <div class="branch-row">
+            <div class="branch"><div class="cond mono">≥ approve threshold</div><div class="node outcome approve">APPROVE</div></div>
+            <div class="branch"><div class="cond mono">between thresholds</div><div class="node outcome refer">REFER</div></div>
+            <div class="branch"><div class="cond mono">≤ decline threshold</div><div class="node outcome decline">DECLINE</div></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="policy">
+      <h2>Policy lifecycle</h2>
+      <p class="section-note">The pitch is "no code deployment" — but that only holds up if every change is still tested, approved, and reversible. Every stage below is a checkpoint, not a formality.</p>
+
+      <div class="diagram">
+        <div class="lifecycle">
+          <div class="node">Draft<div class="sub">analyst edits YAML</div></div>
+          <div class="arrow-r"><svg width="26" height="18"><use href="#arrow-right"/></svg></div>
+          <div class="node">Validate<div class="sub">schema + conflicts</div></div>
+          <div class="arrow-r"><svg width="26" height="18"><use href="#arrow-right"/></svg></div>
+          <div class="node">Simulate<div class="sub">re-run past decisions</div></div>
+          <div class="arrow-r"><svg width="26" height="18"><use href="#arrow-right"/></svg></div>
+          <div class="node">Approve<div class="sub">authorized sign-off</div></div>
+          <div class="arrow-r"><svg width="26" height="18"><use href="#arrow-right"/></svg></div>
+          <div class="node accent">Activate<div class="sub">effective_date set</div></div>
+          <div class="arrow-r"><svg width="26" height="18"><use href="#arrow-right"/></svg></div>
+          <div class="node">Monitor<div class="sub">watch approval drift</div></div>
+        </div>
+        <div class="rollback-note">
+          <span class="mono">Rollback</span> — if approval rate drifts after activation, the previous version reverts instantly and monitoring continues on it. No re-deployment, no waiting on engineering.
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="storage">
+      <h2>Storage &amp; stack</h2>
+      <p class="section-note">No database for the hackathon build — everything lives on a filesystem backend that both the agents and the audit trail read from directly.</p>
+
+      <div class="stack-grid">
+        <div class="stack-cell">
+          <h4>Runtime</h4>
+          <ul>
+            <li>deepagents v0.6+ <span class="tag">orchestration</span></li>
+            <li>LangGraph <span class="tag">streaming, persistence</span></li>
+            <li>FastAPI <span class="tag">API + SSE</span></li>
+            <li>Pydantic <span class="tag">validation</span></li>
+          </ul>
+        </div>
+        <div class="stack-cell">
+          <h4>LLM layer</h4>
+          <ul>
+            <li>Claude <span class="tag">claude-sonnet-4-6</span></li>
+            <li>Structured output <span class="tag">tool_use schema</span></li>
+          </ul>
+        </div>
+        <div class="stack-cell">
+          <h4>Frontend</h4>
+          <ul>
+            <li>React + Vite</li>
+            <li>Tailwind CSS</li>
+            <li>Framer Motion <span class="tag">pipeline animation</span></li>
+            <li>EventSource <span class="tag">SSE client</span></li>
+          </ul>
+        </div>
+        <div class="stack-cell">
+          <h4>Storage — no DB</h4>
+          <ul>
+            <li>YAML <span class="tag">policy/</span></li>
+            <li>JSON <span class="tag">evidence/, decisions/</span></li>
+            <li>Markdown <span class="tag">AGENTS.md</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    Source: <span class="mono">docs/architecture.md</span>, <span class="mono">docs/agent-design.md</span>, <span class="mono">docs/decision-modes-and-controls.md</span>, <span class="mono">docs/scope.md</span> — Credit Genie, GoTyme Agentic AI Build Week 2026.
+  </footer>
+
+</div>
