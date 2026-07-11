@@ -61,6 +61,53 @@ function BnplReasoning({ record }: { record: DecisionRecord }) {
 
 type Tab = "customer" | "reviewer" | "audit";
 
+const CUSTOMER_PRESENTATION = {
+  APPROVE: {
+    title: "Application approved",
+    symbol: "✓",
+    container: "border-approve bg-approve-soft",
+    symbolStyle: "bg-approve text-white",
+  },
+  DECLINE: {
+    title: "Application not approved",
+    symbol: "×",
+    container: "border-decline bg-decline-soft",
+    symbolStyle: "bg-decline text-white",
+  },
+  REFER: {
+    title: "Application needs review",
+    symbol: "…",
+    container: "border-refer bg-refer-soft",
+    symbolStyle: "bg-refer text-white",
+  },
+} as const;
+
+function CustomerExplanation({ record }: { record: DecisionRecord }) {
+  const presentation = CUSTOMER_PRESENTATION[record.outcome];
+
+  return (
+    <section
+      aria-label="Customer-facing decision explanation"
+      className={`min-w-0 rounded-sm border-l-4 p-4 ${presentation.container}`}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold ${presentation.symbolStyle}`}
+        >
+          {presentation.symbol}
+        </span>
+        <div className="min-w-0">
+          <p className="font-semibold text-ink">{presentation.title}</p>
+          <p className="mt-1 whitespace-pre-line break-words text-pretty text-[14px] leading-6 text-ink">
+            {record.explanation.customer}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function DecisionCard({ record }: { record: DecisionRecord }) {
   const [tab, setTab] = useState<Tab>("customer");
 
@@ -113,8 +160,13 @@ export function DecisionCard({ record }: { record: DecisionRecord }) {
       </div>
 
       <div className="mt-2 min-w-0 max-w-full text-[13px] leading-relaxed">
-        {tab === "customer" && <p>{record.explanation.customer}</p>}
-        {tab === "reviewer" && <p>{record.explanation.reviewer}</p>}
+        {tab === "customer" && <CustomerExplanation record={record} />}
+        {tab === "reviewer" && (
+          <div className="min-w-0 rounded-sm border border-border bg-surface-2 p-3.5">
+            <p className="mb-1 font-mono text-[10px] uppercase tracking-wide text-ink-muted">Reviewer rationale</p>
+            <p className="whitespace-pre-line break-words text-[13px] leading-5 text-ink">{record.explanation.reviewer}</p>
+          </div>
+        )}
         {tab === "audit" && (
           <pre className="block max-h-72 w-full max-w-full overflow-x-auto overflow-y-auto rounded-sm bg-surface-2 p-2.5 font-mono text-[11px] leading-snug">
             {JSON.stringify(record.lineage, null, 2)}
