@@ -28,13 +28,44 @@ function ScoreBreakdown({ record }: { record: DecisionRecord }) {
   );
 }
 
+function BnplReasoning({ record }: { record: DecisionRecord }) {
+  const assessment = record.lineage.bnpl_reasoning_assessment;
+  if (record.product !== "bnpl") return null;
+
+  return (
+    <div className="mt-4 rounded-sm border border-border bg-surface-2 p-3">
+      <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-wide">
+        <span className="font-semibold text-accent">BNPL reasoning agent</span>
+        <span className="text-ink-muted">
+          {record.lineage.agent_reasoning_status}
+          {assessment ? ` · confidence ${assessment.confidence.toFixed(2)}` : ""}
+        </span>
+      </div>
+      {assessment && (
+        <>
+          <p className="mt-2 text-[13px] leading-relaxed">{assessment.reasoning}</p>
+          <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-[10px] text-ink-muted">
+            <span className="rounded-sm bg-surface px-1.5 py-0.5">affordability: {assessment.affordability}</span>
+            <span className="rounded-sm bg-surface px-1.5 py-0.5">risk: {assessment.risk}</span>
+            {assessment.evidence_refs.map((evidenceRef) => (
+              <span key={evidenceRef} className="rounded-sm bg-surface px-1.5 py-0.5">
+                cites {evidenceRef}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 type Tab = "customer" | "reviewer" | "audit";
 
 export function DecisionCard({ record }: { record: DecisionRecord }) {
   const [tab, setTab] = useState<Tab>("customer");
 
   return (
-    <div className="rounded-sm border border-border bg-surface p-4">
+    <div className="min-w-0 max-w-full overflow-hidden rounded-sm border border-border bg-surface p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <OutcomeBadge outcome={record.outcome} />
@@ -46,7 +77,7 @@ export function DecisionCard({ record }: { record: DecisionRecord }) {
       {record.lineage.decisive_factors.length > 0 && (
         <ul className="mt-3 flex flex-col gap-1">
           {record.lineage.decisive_factors.map((f, i) => (
-            <li key={i} className="text-[13px] text-ink-muted">
+            <li key={i} className="break-words text-[13px] text-ink-muted">
               &bull; {f}
             </li>
           ))}
@@ -58,6 +89,8 @@ export function DecisionCard({ record }: { record: DecisionRecord }) {
           <ScoreBreakdown record={record} />
         </div>
       )}
+
+      <BnplReasoning record={record} />
 
       {record.lineage.degradations.length > 0 && (
         <div className="mt-3 rounded-sm border border-dashed border-border px-2.5 py-1.5 text-[11px] text-ink-muted">
@@ -79,11 +112,11 @@ export function DecisionCard({ record }: { record: DecisionRecord }) {
         ))}
       </div>
 
-      <div className="mt-2 text-[13px] leading-relaxed">
+      <div className="mt-2 min-w-0 max-w-full text-[13px] leading-relaxed">
         {tab === "customer" && <p>{record.explanation.customer}</p>}
         {tab === "reviewer" && <p>{record.explanation.reviewer}</p>}
         {tab === "audit" && (
-          <pre className="max-h-72 overflow-auto rounded-sm bg-surface-2 p-2.5 font-mono text-[11px] leading-snug">
+          <pre className="block max-h-72 w-full max-w-full overflow-x-auto overflow-y-auto rounded-sm bg-surface-2 p-2.5 font-mono text-[11px] leading-snug">
             {JSON.stringify(record.lineage, null, 2)}
           </pre>
         )}

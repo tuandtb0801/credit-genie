@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { Dashboard } from "./pages/Dashboard";
+import { Ledger } from "./pages/Ledger";
 import { PolicyEditor } from "./pages/PolicyEditor";
 
-type Tab = "dashboard" | "policy";
+type Tab = "dashboard" | "policy" | "ledger";
+
+const TAB_LABEL: Record<Tab, string> = {
+  dashboard: "Decision Dashboard",
+  policy: "Policy Editor",
+  ledger: "Audit Ledger",
+};
 
 function App() {
   const [tab, setTab] = useState<Tab>("dashboard");
@@ -16,7 +23,7 @@ function App() {
             <p className="font-mono text-[10.5px] text-ink-muted">Agentic credit decision engine</p>
           </div>
           <nav className="flex gap-1 rounded-sm border border-border bg-surface-2 p-1">
-            {(["dashboard", "policy"] as Tab[]).map((t) => (
+            {(["dashboard", "policy", "ledger"] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -24,14 +31,18 @@ function App() {
                   tab === t ? "bg-surface text-accent shadow-sm" : "text-ink-muted"
                 }`}
               >
-                {t === "dashboard" ? "Decision Dashboard" : "Policy Editor"}
+                {TAB_LABEL[t]}
               </button>
             ))}
           </nav>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-6">{tab === "dashboard" ? <Dashboard /> : <PolicyEditor />}</main>
+      <main className="mx-auto max-w-6xl px-6 py-6">
+        {tab === "dashboard" && <Dashboard />}
+        {tab === "policy" && <PolicyEditor />}
+        {tab === "ledger" && <Ledger />}
+      </main>
     </div>
   );
 }

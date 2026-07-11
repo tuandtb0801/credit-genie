@@ -15,6 +15,8 @@ _CUSTOMER_TEMPLATES = {
     "SCORE_ABOVE_THRESHOLD": "Good news — your application has been approved.",
     "SCORE_BELOW_THRESHOLD": "We're not able to approve this application based on an overall review of your credit profile, income, and current obligations.",
     "SCORE_IN_REFER_BAND": "Your application is close to our approval line, so we're having a reviewer take a closer look. We'll follow up shortly.",
+    "AGENT_REASONING_UNAVAILABLE": "We need a little more time to review this purchase. The automated assessment did not finish in time, so we have not automatically approved it.",
+    "AGENT_LOW_CONFIDENCE": "We need a closer look before deciding because the available information was not strong enough for an automated decision.",
 }
 
 _REVIEWER_TEMPLATES = {
@@ -27,6 +29,8 @@ _REVIEWER_TEMPLATES = {
     "SCORE_ABOVE_THRESHOLD": "final_score={final_score:.2f} met or exceeded the approve threshold ({approve_threshold:.2f}). Component scores: eligibility={eligibility_score:.2f}, affordability={affordability_score:.2f}, risk={risk_score:.2f}.",
     "SCORE_BELOW_THRESHOLD": "final_score={final_score:.2f} was at or below the decline threshold ({decline_threshold:.2f}). Component scores: eligibility={eligibility_score:.2f}, affordability={affordability_score:.2f}, risk={risk_score:.2f}.",
     "SCORE_IN_REFER_BAND": "final_score={final_score:.2f} fell between the decline ({decline_threshold:.2f}) and approve ({approve_threshold:.2f}) thresholds.",
+    "AGENT_REASONING_UNAVAILABLE": "The BNPL reasoning agent did not complete within its checkout deadline. Safe fallback applied: no automatic approval.",
+    "AGENT_LOW_CONFIDENCE": "The BNPL reasoning agent completed with confidence below the policy minimum; the deterministic scorer was not allowed to auto-approve.",
 }
 
 

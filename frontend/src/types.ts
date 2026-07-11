@@ -16,6 +16,12 @@ export interface Factor {
   impact: "positive" | "negative" | "neutral";
 }
 
+/** A live "agent is working" indicator streamed before each LLM stage completes. */
+export interface AgentThinking {
+  agent: string;
+  note: string;
+}
+
 export interface AgentMessage {
   from_agent: string;
   to_agent: string | null;
@@ -23,6 +29,15 @@ export interface AgentMessage {
   content: string;
   evidence_refs: string[];
   timestamp: string;
+}
+
+export interface BnplReasoningAssessment {
+  affordability: "adequate" | "marginal" | "inadequate" | "uncertain";
+  risk: "low" | "moderate" | "elevated" | "high";
+  confidence: number;
+  evidence_refs: string[];
+  flags: string[];
+  reasoning: string;
 }
 
 export interface DecisionLineage {
@@ -34,6 +49,8 @@ export interface DecisionLineage {
   hard_rules_triggered: { id: string; condition: string; reason_code: string }[];
   affordability_assessment: Record<string, unknown> | null;
   risk_assessment: Record<string, unknown> | null;
+  bnpl_reasoning_assessment: BnplReasoningAssessment | null;
+  agent_reasoning_status: string | null;
   consensus: Record<string, unknown> | null;
   component_scores: Record<string, number> | null;
   final_score: number | null;
@@ -57,6 +74,27 @@ export interface DecisionRecord {
   latency_ms: number | null;
 }
 
+export interface ApplicantEvidence {
+  applicant_id: string;
+  signals: {
+    credit_score: number | null;
+    score_band: string | null;
+    credit_history_months: number | null;
+    monthly_income: number;
+    monthly_obligations: number;
+    dti_ratio: number;
+    bnpl_active_count: number;
+    utilization_ratio: number;
+    total_exposure: number;
+    max_dpd: number;
+  };
+  income_verification_status: string;
+  employment_type: string;
+  deposit_pattern: { pattern: string; note: string };
+  bnpl_providers: string[];
+  sources: Record<string, { confidence: string | null; freshness_days: number | null }>;
+}
+
 export type StageName = "ingest" | "reason" | "score" | "explain";
 
 export interface PipelineStage {
@@ -70,7 +108,7 @@ export interface PolicySegment {
   mode: string;
   time_budget_ms: number;
   scoring: { weights: Record<string, number>; thresholds: Record<string, number> };
-  features: Record<string, boolean>;
+  features: Record<string, boolean | string | number>;
   eligibility: { min_score_band: string; min_credit_history_months: number };
   affordability: { dti_decline_ceiling: number };
   risk: { max_bnpl_stacking: number; max_utilization: number };
@@ -84,7 +122,7 @@ export interface Policy {
   approved_by: string | null;
   change_reason: string;
   segments: Record<Product, PolicySegment>;
-  hard_rules: { id: string; condition: string; action: Outcome; reason_code: string; applies_to: Product[] }[];
+  hard_rules: { id: string; description?: string; condition: string; action: Outcome; reason_code: string; applies_to: Product[] }[];
 }
 
 export interface PolicyDraft {
@@ -93,6 +131,8 @@ export interface PolicyDraft {
   status: string;
   change_reason: string;
   drafted_by: string;
+  /** Draft forked from an older active policy — activating it would revert newer changes. */
+  stale: boolean;
 }
 
 export interface SimulateResultRow {
@@ -108,4 +148,38 @@ export interface SimulateResult {
   total: number;
   changed: number;
   results: SimulateResultRow[];
+}
+
+export interface BacktestMetrics {
+  total: number;
+  approval_rate: number;
+  decline_rate: number;
+  refer_rate: number;
+  approved_count: number;
+  approved_defaults: number;
+  bad_rate_among_approved: number | null;
+  expected_loss: number;
+  reason_codes: Record<string, number>;
+}
+
+export interface CalibrationBucket {
+  score_range: string;
+  count: number;
+  actual_default_rate: number | null;
+}
+
+export interface BacktestResult {
+  book: { size: number; seed: number; base_default_rate: number; lgd: number; caveat: string };
+  product: Product;
+  active_version: string;
+  draft_version: string;
+  active: BacktestMetrics;
+  draft: BacktestMetrics;
+  deltas: {
+    approval_rate: number | null;
+    bad_rate_among_approved: number | null;
+    expected_loss: number | null;
+    approved_count: number | null;
+  };
+  calibration: CalibrationBucket[];
 }

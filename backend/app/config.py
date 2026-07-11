@@ -17,6 +17,10 @@ DECISIONS_ROOT = WORKSPACE_ROOT / "decisions"
 APPLICANTS_PATH = WORKSPACE_ROOT / "applicants.json"
 
 OPENAI_MODEL = os.environ.get("CREDIT_GENIE_MODEL", "gpt-5.1")
+BNPL_MODEL = os.environ.get("CREDIT_GENIE_BNPL_MODEL", "gpt-4.1-nano")
+# Keep a hard ceiling below the 2s checkout budget. The orchestrator also reserves
+# time dynamically for evidence, scoring, persistence, and response serialization.
+BNPL_AGENT_TIMEOUT_MS = max(100, min(1800, int(os.environ.get("CREDIT_GENIE_BNPL_AGENT_TIMEOUT_MS", "1800"))))
 
 
 def require_api_key() -> str:

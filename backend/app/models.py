@@ -20,6 +20,17 @@ class Factor(BaseModel):
     impact: Literal["positive", "negative", "neutral"]
 
 
+class EligibilityAssessment(BaseModel):
+    """Structured output required from the Eligibility agent. The deterministic gate check
+    (its tool) is binding — the agent verifies, cites, and explains; it cannot override."""
+
+    result: Literal["PASS", "FAIL"]
+    reasons: list[str] = Field(default_factory=list, description="On FAIL: which minimum criteria were not met, per the gate check tool")
+    confidence: float = Field(ge=0, le=1)
+    factors: list[Factor]
+    reasoning: str
+
+
 class AffordabilityAssessment(BaseModel):
     """Structured output required from the Affordability agent."""
 
@@ -46,6 +57,18 @@ class RiskAssessment(BaseModel):
     concern_for_affordability: str | None = Field(
         default=None, description="Set only if something here should make the Affordability agent reconsider its assessment"
     )
+
+
+class BnplReasoningAssessment(BaseModel):
+    """Single-pass BNPL agent output. It informs confidence and lineage but cannot
+    override hard rules or perform the final weighted-score decision."""
+
+    affordability: Literal["adequate", "marginal", "inadequate", "uncertain"]
+    risk: Literal["low", "moderate", "elevated", "high"]
+    confidence: float = Field(ge=0, le=1)
+    evidence_refs: list[str] = Field(max_length=4)
+    flags: list[str] = Field(default_factory=list, max_length=4)
+    reasoning: str = Field(max_length=300, description="Concise, audit-safe summary; never hidden chain-of-thought.")
 
 
 class ExplanationViews(BaseModel):
@@ -77,6 +100,8 @@ class DecisionLineage(BaseModel):
     hard_rules_triggered: list[dict[str, Any]] = Field(default_factory=list)
     affordability_assessment: dict[str, Any] | None = None
     risk_assessment: dict[str, Any] | None = None
+    bnpl_reasoning_assessment: dict[str, Any] | None = None
+    agent_reasoning_status: str | None = None
     consensus: dict[str, Any] | None = None
     component_scores: dict[str, float] | None = None
     final_score: float | None = None

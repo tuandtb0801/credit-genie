@@ -13,9 +13,35 @@ from typing import Any
 from app.config import DECISIONS_ROOT
 from app.models import DecisionRecord
 
-_ledger: list[DecisionRecord] = []
-_daily_sequence = itertools.count(1)
+
+def _load_persisted_decisions() -> list[DecisionRecord]:
+    """Rehydrate the ledger from disk so the audit trail survives server restarts."""
+    records = []
+    for path in sorted(DECISIONS_ROOT.glob("d-*.json")):
+        try:
+            records.append(DecisionRecord.model_validate_json(path.read_text()))
+        except (ValueError, json.JSONDecodeError):
+            continue  # skip corrupt/foreign files rather than refuse to start
+    records.sort(key=lambda r: r.created_at)
+    return records
+
+
+def _resume_sequence(records: list[DecisionRecord], today: date) -> itertools.count:
+    """Continue today's decision-id sequence past what's already on disk."""
+    prefix = f"d-{today.isoformat()}-"
+    max_seq = 0
+    for record in records:
+        if record.decision_id.startswith(prefix):
+            try:
+                max_seq = max(max_seq, int(record.decision_id.rsplit("-", 1)[-1]))
+            except ValueError:
+                continue
+    return itertools.count(max_seq + 1)
+
+
+_ledger: list[DecisionRecord] = _load_persisted_decisions()
 _sequence_date = date.today()
+_daily_sequence = _resume_sequence(_ledger, _sequence_date)
 
 
 def _next_decision_id() -> str:

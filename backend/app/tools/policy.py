@@ -43,8 +43,19 @@ def get_segment_config(policy: dict[str, Any], product: str) -> dict[str, Any]:
     }
 
 
+def version_tuple(version: Any) -> tuple[int, ...]:
+    """Parse '2.10' -> (2, 10) for correct ordering; unparseable versions rank lowest."""
+    try:
+        return tuple(int(p) for p in str(version).split("."))
+    except ValueError:
+        return (-1,)
+
+
 def list_drafts() -> list[dict[str, Any]]:
-    """List draft policies awaiting simulation/approval."""
+    """List draft policies awaiting simulation/approval. Drafts whose version is not ahead
+    of the active policy are flagged stale: they forked from an older active policy, and
+    activating them would silently revert every change made since."""
+    active_version = version_tuple(get_active_policy().get("version"))
     drafts = []
     for path in sorted(POLICY_DRAFTS_ROOT.glob("*.yaml")):
         policy = load_policy_file(path)
@@ -55,6 +66,7 @@ def list_drafts() -> list[dict[str, Any]]:
                 "status": policy.get("status"),
                 "change_reason": policy.get("change_reason"),
                 "drafted_by": policy.get("drafted_by"),
+                "stale": version_tuple(policy.get("version")) <= active_version,
             }
         )
     return drafts
@@ -78,6 +90,11 @@ def validate_policy(policy: dict[str, Any]) -> list[str]:
 
     if not policy.get("hard_rules"):
         errors.append("policy has no hard_rules defined")
+    else:
+        rule_ids = [r.get("id") for r in policy["hard_rules"]]
+        duplicates = {i for i in rule_ids if rule_ids.count(i) > 1}
+        if duplicates:
+            errors.append(f"duplicate hard rule ids: {sorted(duplicates)}")
 
     return errors
 
@@ -153,12 +170,27 @@ def simulate_policy_change(draft_filename: str, applicant_ids: list[str], produc
 
 
 def activate_policy(draft_filename: str, approved_by: str) -> dict[str, Any]:
-    """Approve and activate a draft: archive the current active policy, promote the draft."""
+    """Approve and activate a draft: archive the current active policy, promote the draft.
+
+    Refuses stale drafts (version not ahead of active): they forked from an older active
+    policy, so promoting one would silently revert every rule and threshold change made
+    since. The analyst must redraft on top of the current policy instead.
+    """
     POLICY_HISTORY_ROOT.mkdir(parents=True, exist_ok=True)
     active_policy = get_active_policy()
 
+    draft_preview = load_policy_file(POLICY_DRAFTS_ROOT / draft_filename)
+    if version_tuple(draft_preview.get("version")) <= version_tuple(active_policy.get("version")):
+        raise ValueError(
+            f"Draft v{draft_preview.get('version')} is stale: active policy is already "
+            f"v{active_policy.get('version')}. Activating it would silently revert newer changes — redraft from the current policy."
+        )
+
     archive_name = f"credit_policy_v{active_policy['version']}.yaml"
-    shutil.copy(POLICY_ACTIVE_PATH, POLICY_HISTORY_ROOT / archive_name)
+    archive_path = POLICY_HISTORY_ROOT / archive_name
+    if archive_path.exists():  # never overwrite an audit copy
+        archive_path = POLICY_HISTORY_ROOT / f"credit_policy_v{active_policy['version']}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.yaml"
+    shutil.copy(POLICY_ACTIVE_PATH, archive_path)
 
     draft_path = POLICY_DRAFTS_ROOT / draft_filename
     draft = yaml.safe_load(draft_path.read_text())
@@ -174,16 +206,32 @@ def activate_policy(draft_filename: str, approved_by: str) -> dict[str, Any]:
 
 
 def rollback_policy() -> dict[str, Any]:
-    """Revert to the most recently archived policy version."""
-    history_files = sorted(POLICY_HISTORY_ROOT.glob("*.yaml"), key=lambda p: p.stat().st_mtime)
-    if not history_files:
+    """Revert to the highest archived version strictly below the current one.
+
+    Ordering by version (not file mtime) matters: the demoted active policy lands in the
+    same history pool, so an mtime-ordered pick would restore it right back on the next
+    rollback and ping-pong between the last two versions forever. Version-ordered selection
+    walks the chain monotonically: v2.5 -> v2.3 -> v2.1 -> error.
+    """
+    current = get_active_policy()
+    current_version = version_tuple(current.get("version"))
+
+    candidates = [
+        (version_tuple(policy.get("version")), path)
+        for path in POLICY_HISTORY_ROOT.glob("*.yaml")
+        if (policy := yaml.safe_load(path.read_text()))
+    ]
+    older = [(v, p) for v, p in candidates if v < current_version]
+    if not older:
         raise ValueError("No previous policy version to roll back to.")
 
-    previous_path = history_files[-1]
-    current = get_active_policy()
+    _, previous_path = max(older)
 
     demoted_name = f"credit_policy_v{current['version']}.yaml"
-    shutil.move(str(POLICY_ACTIVE_PATH), str(POLICY_HISTORY_ROOT / demoted_name))
+    demoted_path = POLICY_HISTORY_ROOT / demoted_name
+    if demoted_path.exists():  # never overwrite an audit copy
+        demoted_path = POLICY_HISTORY_ROOT / f"credit_policy_v{current['version']}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.yaml"
+    shutil.move(str(POLICY_ACTIVE_PATH), str(demoted_path))
     shutil.move(str(previous_path), str(POLICY_ACTIVE_PATH))
 
     return load_policy_file(POLICY_ACTIVE_PATH)

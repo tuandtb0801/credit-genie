@@ -1,9 +1,8 @@
 version: "2.2"
-effective_date: null
+effective_date: "2026-07-11"
 status: draft
-approved_by: null
-change_reason: "Loosen personal_loan affordability ceiling from 40% to 50% DTI — Q3 origination target was missing marginal-DTI applicants who score well on every other factor."
 drafted_by: "risk-analyst@credit-genie"
+change_reason: "Raise personal_loan DTI decline ceiling from 40% to 50% — Q3 origination target is missing marginal-DTI applicants who score well on every other factor."
 
 segments:
   personal_loan:
@@ -32,9 +31,13 @@ segments:
       weights: { eligibility: 0.30, affordability: 0.35, risk: 0.35 }
       thresholds: { approve: 0.75, decline: 0.40 }
     features:
-      llm_reasoning: false
+      llm_reasoning: true
       agent_collaboration: false
       multi_pass_evidence: false
+      agent_mode: single_pass
+    agent:
+      timeout_ms: 1800
+      min_confidence: 0.60
     eligibility:
       min_score_band: fair
       min_credit_history_months: 6
@@ -44,26 +47,31 @@ segments:
       max_bnpl_stacking: 3
       max_utilization: 0.80
 
+# Same hard rules apply to both segments unless narrowed by applies_to.
 hard_rules:
   - id: HR-001
+    description: "Decline applicants with a payment 90 or more days past due — severe delinquency."
     condition: "max_dpd >= 90"
     action: DECLINE
     reason_code: SEVERE_DELINQUENCY
     applies_to: [personal_loan, bnpl]
 
   - id: HR-002
+    description: "Decline when monthly obligations exceed the segment's debt-to-income ceiling."
     condition: "dti_ratio > affordability.dti_decline_ceiling"
     action: DECLINE
     reason_code: UNAFFORDABLE
     applies_to: [personal_loan, bnpl]
 
   - id: HR-003
+    description: "Refer applicants whose credit history is shorter than the segment minimum — too thin to auto-decide."
     condition: "credit_history_months < eligibility.min_credit_history_months"
     action: REFER
     reason_code: THIN_FILE
     applies_to: [personal_loan, bnpl]
 
   - id: HR-004
+    description: "Decline BNPL checkouts when active BNPL plans or utilization exceed the stacking caps."
     condition: "bnpl_active_count > risk.max_bnpl_stacking or utilization_ratio > risk.max_utilization"
     action: DECLINE
     reason_code: OVER_EXPOSED

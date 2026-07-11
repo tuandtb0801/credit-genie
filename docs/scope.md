@@ -22,7 +22,7 @@ Bank cannot turn fragmented borrower evidence + changing credit policy into fast
 
 ## Deferred (Out of Scope)
 
-- BNPL latency optimization beyond rules-only fast path (#3 infra depth)
+- BNPL latency optimization beyond a bounded single-pass reasoning agent (#3 infra depth)
 - Full human review workflow (#5 — REFER exists as outcome, no reviewer UI)
 - Scale/concurrency/idempotency (#6 — production concern)
 - Real bureau/bank integrations
@@ -37,7 +37,7 @@ Both Personal Loan and BNPL (thin slice each)
 | Product | Decision Speed | Method |
 |---------|---------------|--------|
 | Personal Loan | < 60s | Full agent reasoning (LLM) |
-| BNPL | < 2s | Rules-only fast path (no LLM) |
+| BNPL | < 2s | Single-pass agent reasoning + deterministic scoring |
 
 ## Core Components
 
@@ -78,7 +78,7 @@ Both Personal Loan and BNPL (thin slice each)
 ## Success Criteria
 
 - [ ] Personal loan decision < 60s with cited reasoning
-- [ ] BNPL decision < 2s (rules-based)
+- [ ] BNPL decision < 2s end-to-end including one structured agent reasoning call
 - [ ] Agent collaboration visible in UI (messages streamed)
 - [ ] Change policy YAML → re-run → different outcome
 - [ ] Simulation: "N of 5 past decisions would flip under new policy"

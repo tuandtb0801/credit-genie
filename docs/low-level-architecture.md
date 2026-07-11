@@ -217,47 +217,21 @@ sequenceDiagram
 sequenceDiagram
     participant C as Client
     participant F as FastAPI
-    participant DA as Deep Agents Runtime
-    participant LLM as Claude API
+    participant A as BNPL Reasoning Agent
     participant T as Tools
     participant FS as Filesystem
 
     C->>F: POST /api/decide {applicant_id, product: "bnpl"}
-    F->>DA: invoke(messages: "Decide for APP-001, bnpl")
+    F->>T: Fetch four cached evidence sources + active policy
+    T-->>F: Evidence packet + policy
+    F->>F: Eligibility, hard rules, DTI, risk anchor
+    F->>A: Compact evidence + source quality + deterministic anchors
+    A-->>F: Structured assessment + confidence + evidence refs
+    F->>F: Deterministic rules, score, threshold, template explanation
+    F->>FS: Write decision record
+    F-->>C: {outcome: APPROVE, latency_ms: 1xxx}
 
-    DA->>LLM: System prompt + "BNPL mode: use fast path, rules only"
-    
-    Note over DA,T: ALL IN ONE PASS (no sub-agents)
-    LLM-->>DA: tool_call: fetch_bureau_data(APP-001)
-    DA->>T: Execute (cached data)
-    T-->>DA: {credit_score: 680, ...}
-
-    LLM-->>DA: tool_call: fetch_exposure_data(APP-001)
-    DA->>T: Execute (cached)
-    T-->>DA: {bnpl_active: 1, obligations: 1200}
-
-    LLM-->>DA: tool_call: load_active_policy("bnpl")
-    DA->>T: Execute
-    T-->>DA: Policy config (tighter thresholds)
-
-    LLM-->>DA: tool_call: evaluate_rules(hard_rules, evidence)
-    DA->>T: Execute
-    T-->>DA: No hard rules triggered
-
-    LLM-->>DA: tool_call: compute_dti(4500, 1200)
-    DA->>T: Execute
-    T-->>DA: {dti: 0.27, assessment: "adequate"}
-
-    LLM-->>DA: tool_call: apply_thresholds(0.81, {approve: 0.75, decline: 0.40})
-    DA->>T: Execute
-    T-->>DA: APPROVE
-
-    LLM-->>DA: "Decision: APPROVE. Template explanation applied."
-    DA->>FS: Write decision record
-    DA-->>F: JSON response (no SSE for BNPL)
-    F-->>C: {outcome: APPROVE, latency_ms: 180}
-
-    Note over C,FS: Total: ~150-300ms<br/>No LLM reasoning on evidence<br/>No sub-agents<br/>No collaboration<br/>Single LLM call for orchestration only
+    Note over C,FS: Target total: <2s<br/>One structured reasoning call<br/>No sub-agents<br/>No collaboration<br/>Python owns the final outcome
 ```
 
 ---

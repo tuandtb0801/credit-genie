@@ -1,7 +1,7 @@
 {
   "applicant_id": "james-wilson",
-  "credit_score": 580,
-  "score_band": "poor",
+  "credit_score": 615,
+  "score_band": "fair",
   "credit_history_months": 60,
   "delinquency_summary": "severe - 120 days past due",
   "confidence": "verified",
