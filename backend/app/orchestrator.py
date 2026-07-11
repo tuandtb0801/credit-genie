@@ -1,7 +1,8 @@
 """Personal Loan full path: the pipeline coordinates deterministically in plain Python
 (evidence ingest -> eligibility -> hard rules -> parallel agent assessment -> collaboration
--> consensus -> weighted score -> explanation), while each reasoning step (Affordability,
-Risk, Explanation) is a real deepagents/LangGraph agent backed by OpenAI.
+-> consensus -> weighted score -> explanation), while each reasoning step (Eligibility,
+Affordability, Risk, Explanation) is a real deepagents/LangGraph agent backed by OpenAI.
+The Eligibility agent's deterministic gate check stays binding on control flow.
 
 Why the orchestration itself isn't an LLM ReAct loop: docs/decision-modes-and-controls.md's
 own "Layer 3: Scoring Determinism" requires the weighting, threshold comparison, hard-rule
@@ -18,17 +19,28 @@ from collections.abc import AsyncIterator
 from typing import Any
 
 from app.agents.prompts import EXPLANATION_SYSTEM_PROMPT
-from app.agents.subagents import get_affordability_agent, get_explanation_model, get_risk_agent
+from app.agents.subagents import get_affordability_agent, get_eligibility_agent, get_explanation_model, get_risk_agent
 from app.ledger import new_decision_id, save_decision
-from app.models import AffordabilityAssessment, AgentMessage, DecisionLineage, DecisionRecord, RiskAssessment
+from app.models import AffordabilityAssessment, AgentMessage, DecisionLineage, DecisionRecord, EligibilityAssessment, RiskAssessment
 from app.tools import scoring
 from app.tools.evidence import build_flat_evidence, detect_deposit_irregularity, fetch_full_packet, mask_pii
 from app.tools.explanation import generate_template_explanation
 from app.tools.policy import get_active_policy, get_segment_config
 
 PRODUCT = "personal_loan"
-AGENT_TIMEOUT_S = 25
-EXPLAIN_TIMEOUT_S = 30
+# Stage budgets from docs/decision-modes-and-controls.md §3.1/§3.3 (Agents 30s,
+# Collaboration 8s, Explain 10s); each is additionally capped by what remains of the
+# segment's time_budget_ms so the whole decision stays inside the advertised 60s.
+ELIGIBILITY_TIMEOUT_S = 10
+AGENT_TIMEOUT_S = 30
+# §3.3 sketches an 8s collaboration timeout, but the reassessment measurably needs 8-12s —
+# at 8s the demo-critical challenge->respond exchange times out on roughly half of runs.
+# 15s keeps it reliable; the overall time_budget_ms cap still bounds the total at 60s.
+COLLAB_TIMEOUT_S = 15
+# Explain gets its 10s stage budget plus the §3.1 15s safety buffer: REFER lineages
+# (both agent viewpoints + collaboration transcript) consistently need >10s to narrate,
+# and the overall time_budget_ms cap above still guarantees the 60s total.
+EXPLAIN_TIMEOUT_S = 25
 
 
 def _event(event: str, data: dict[str, Any]) -> dict[str, Any]:
@@ -38,6 +50,16 @@ def _event(event: str, data: dict[str, Any]) -> dict[str, Any]:
 async def _invoke_agent(agent, task_message: str):
     result = await agent.ainvoke({"messages": [{"role": "user", "content": task_message}]})
     return result["structured_response"]
+
+
+async def _run_eligibility(bureau: dict, min_score_band: str, gate: dict) -> EligibilityAssessment:
+    message = (
+        f"Applicant bureau evidence (PII-masked): {bureau}\n"
+        f"Active policy minimum score band for this segment: {min_score_band}\n"
+        f"Deterministic gate check result (binding): {gate}\n\n"
+        "Run the eligibility gate check for this applicant."
+    )
+    return await _invoke_agent(get_eligibility_agent(), message)
 
 
 async def _run_affordability(income: dict, irregularity: dict, ceiling: float, concern: str | None = None) -> AffordabilityAssessment:
@@ -88,12 +110,41 @@ async def decide_personal_loan(applicant_id: str) -> AsyncIterator[dict[str, Any
         policy = get_active_policy()
         segment_cfg = get_segment_config(policy, PRODUCT)
 
+        budget_s = segment_cfg["time_budget_ms"] / 1000
+
+        def stage_timeout(cap_s: float) -> float:
+            """Stage budget, further capped by what's left of the segment's total budget."""
+            return max(0.1, min(cap_s, budget_s - (time.perf_counter() - start)))
+
         # ---- Stage 2: Reason ----
         yield _event("stage_start", {"stage": "reason"})
         t = time.perf_counter()
 
+        # The deterministic gate is binding; the Eligibility agent verifies and explains it.
         eligibility = scoring.eligibility_check(flat_evidence, segment_cfg)
-        yield msg("eligibility", "assessment", f"{eligibility['result']} — score_band '{eligibility['score_band']}'", evidence_refs=["bureau.score_band"])
+        yield _event("agent_thinking", {"agent": "eligibility", "note": "Verifying gate criteria against bureau evidence…"})
+        try:
+            elig_assessment = await asyncio.wait_for(
+                _run_eligibility(safe_packet["bureau"], segment_cfg["eligibility"]["min_score_band"], eligibility),
+                timeout=stage_timeout(ELIGIBILITY_TIMEOUT_S),
+            )
+            if elig_assessment.result != eligibility["result"]:
+                degradations.append("eligibility_agent_disagreement: deterministic gate result kept as binding")
+            eligibility = {
+                **eligibility,
+                "confidence": elig_assessment.confidence,
+                "reasoning": elig_assessment.reasoning,
+                "factors": [f.model_dump() for f in elig_assessment.factors],
+            }
+            yield msg(
+                "eligibility",
+                "assessment",
+                f"{eligibility['result']} (confidence {elig_assessment.confidence:.2f}): {elig_assessment.reasoning}",
+                evidence_refs=[f.evidence_ref for f in elig_assessment.factors] or ["bureau.score_band"],
+            )
+        except (TimeoutError, asyncio.TimeoutError, RuntimeError) as elig_exc:
+            degradations.append(f"eligibility_agent_unavailable ({elig_exc}): deterministic gate only")
+            yield msg("eligibility", "assessment", f"{eligibility['result']} — score_band '{eligibility['score_band']}'", evidence_refs=["bureau.score_band"])
 
         hard_rules_triggered: list[dict] = []
         affordability: AffordabilityAssessment | None = None
@@ -112,13 +163,15 @@ async def decide_personal_loan(applicant_id: str) -> AsyncIterator[dict[str, Any
                 yield msg("orchestrator", "escalate", f"Hard rule {rule['id']} triggered: {rule['condition']}")
             else:
                 # Parallel Affordability + Risk assessment
+                yield _event("agent_thinking", {"agent": "affordability", "note": "Analyzing income stability and debt-to-income…"})
+                yield _event("agent_thinking", {"agent": "risk", "note": "Reviewing delinquency, exposure and deposit patterns…"})
                 try:
                     affordability, risk = await asyncio.wait_for(
                         asyncio.gather(
                             _run_affordability(safe_packet["income"], irregularity, segment_cfg["affordability"]["dti_decline_ceiling"]),
                             _run_risk(safe_packet["delinquency"], safe_packet["exposure"], irregularity, packet["income"].get("employment_type", "unknown"), packet["income"].get("income_verification_status", "unknown")),
                         ),
-                        timeout=AGENT_TIMEOUT_S,
+                        timeout=stage_timeout(AGENT_TIMEOUT_S),
                     )
                 except (TimeoutError, asyncio.TimeoutError, RuntimeError) as agent_exc:
                     degradations.append(f"agent_unavailable ({agent_exc}): fell back to deterministic rules-only anchors")
@@ -133,10 +186,11 @@ async def decide_personal_loan(applicant_id: str) -> AsyncIterator[dict[str, Any
                 # Collaboration round: Risk challenges Affordability
                 if risk.concern_for_affordability:
                     yield msg("risk", "flag_concern", risk.concern_for_affordability, to_agent="affordability")
+                    yield _event("agent_thinking", {"agent": "affordability", "note": "Re-examining income evidence against Risk's concern…"})
                     try:
                         affordability = await asyncio.wait_for(
                             _run_affordability(safe_packet["income"], irregularity, segment_cfg["affordability"]["dti_decline_ceiling"], concern=risk.concern_for_affordability),
-                            timeout=AGENT_TIMEOUT_S,
+                            timeout=stage_timeout(COLLAB_TIMEOUT_S),
                         )
                         yield msg("affordability", "provide_context", f"Reassessed: {affordability.assessment} (confidence {affordability.confidence:.2f}): {affordability.reasoning}", to_agent="risk")
                     except (TimeoutError, asyncio.TimeoutError, RuntimeError):
@@ -201,6 +255,7 @@ async def decide_personal_loan(applicant_id: str) -> AsyncIterator[dict[str, Any
         )
 
         explanation: dict[str, str] | None = None
+        yield _event("agent_thinking", {"agent": "explanation", "note": "Writing customer- and reviewer-facing explanations…"})
         try:
             result = await asyncio.wait_for(
                 get_explanation_model().ainvoke(
@@ -209,7 +264,7 @@ async def decide_personal_loan(applicant_id: str) -> AsyncIterator[dict[str, Any
                         {"role": "user", "content": f"Decision lineage:\n{lineage.model_dump_json(indent=2)}"},
                     ]
                 ),
-                timeout=EXPLAIN_TIMEOUT_S,
+                timeout=stage_timeout(EXPLAIN_TIMEOUT_S),
             )
             explanation = {"customer": result.customer, "reviewer": result.reviewer}
         except (TimeoutError, asyncio.TimeoutError, RuntimeError) as explain_exc:

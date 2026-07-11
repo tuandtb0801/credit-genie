@@ -1,8 +1,8 @@
-"""LLM-backed reasoning agents for the Personal Loan full path: Affordability and Risk
-(deep agents with structured output), plus the Explanation agent.
+"""LLM-backed reasoning agents for the Personal Loan full path: Eligibility, Affordability
+and Risk (deep agents with structured output), plus the Explanation agent.
 
-Eligibility is deliberately not here — per docs/agent-design.md it never uses LLM
-reasoning, so it's plain Python in app/tools/scoring.eligibility_check.
+The Eligibility agent's gate check is a deterministic tool and stays binding in the
+orchestrator — the agent verifies and explains the gate, it cannot flip it.
 
 Pipeline sequencing, the consensus check, and final scoring stay in app/orchestrator.py
 as deterministic Python — see that module's docstring for why.
@@ -16,9 +16,15 @@ from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 
 from app.config import OPENAI_MODEL, WORKSPACE_ROOT, require_api_key
-from app.models import AffordabilityAssessment, ExplanationViews, RiskAssessment
+from app.models import AffordabilityAssessment, EligibilityAssessment, ExplanationViews, RiskAssessment
 from app.tools import scoring
-from app.agents.prompts import AFFORDABILITY_SYSTEM_PROMPT, EXPLANATION_SYSTEM_PROMPT, RISK_SYSTEM_PROMPT
+from app.agents.prompts import AFFORDABILITY_SYSTEM_PROMPT, ELIGIBILITY_SYSTEM_PROMPT, EXPLANATION_SYSTEM_PROMPT, RISK_SYSTEM_PROMPT
+
+
+@tool
+def check_eligibility(score_band: str, min_score_band: str) -> dict:
+    """Deterministic, binding gate check: is the applicant's bureau score band at or above the policy minimum?"""
+    return scoring.eligibility_check({"score_band": score_band}, {"eligibility": {"min_score_band": min_score_band}})
 
 
 @tool
@@ -40,6 +46,18 @@ def _model() -> ChatOpenAI:
 
 def _backend() -> FilesystemBackend:
     return FilesystemBackend(root_dir=str(WORKSPACE_ROOT))
+
+
+@lru_cache(maxsize=1)
+def get_eligibility_agent():
+    return create_deep_agent(
+        model=_model(),
+        tools=[check_eligibility],
+        system_prompt=ELIGIBILITY_SYSTEM_PROMPT,
+        response_format=EligibilityAssessment,
+        backend=_backend(),
+        name="eligibility-agent",
+    )
 
 
 @lru_cache(maxsize=1)

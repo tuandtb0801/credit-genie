@@ -20,6 +20,17 @@ class Factor(BaseModel):
     impact: Literal["positive", "negative", "neutral"]
 
 
+class EligibilityAssessment(BaseModel):
+    """Structured output required from the Eligibility agent. The deterministic gate check
+    (its tool) is binding — the agent verifies, cites, and explains; it cannot override."""
+
+    result: Literal["PASS", "FAIL"]
+    reasons: list[str] = Field(default_factory=list, description="On FAIL: which minimum criteria were not met, per the gate check tool")
+    confidence: float = Field(ge=0, le=1)
+    factors: list[Factor]
+    reasoning: str
+
+
 class AffordabilityAssessment(BaseModel):
     """Structured output required from the Affordability agent."""
 

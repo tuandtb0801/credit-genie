@@ -8,9 +8,10 @@ from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from app.bnpl import decide_bnpl
-from app.config import APPLICANTS_PATH
+from app.config import APPLICANTS_PATH, EVIDENCE_ROOT
 from app.ledger import get_decision, list_decisions
 from app.orchestrator import decide_personal_loan
+from app.tools.evidence import build_flat_evidence, detect_deposit_irregularity, fetch_full_packet
 
 router = APIRouter(prefix="/api")
 
@@ -24,6 +25,27 @@ class DecideRequest(BaseModel):
 def get_applicants() -> list[dict]:
     """List the demo applicant personas."""
     return json.loads(APPLICANTS_PATH.read_text())
+
+
+@router.get("/applicants/{applicant_id}/evidence")
+def get_applicant_evidence(applicant_id: str) -> dict:
+    """The decisive evidence signals for an applicant — what the rules and agents actually cite."""
+    if not (EVIDENCE_ROOT / applicant_id).is_dir():
+        raise HTTPException(status_code=404, detail=f"Applicant '{applicant_id}' not found.")
+    packet = fetch_full_packet(applicant_id)
+    income = packet["income"]
+    return {
+        "applicant_id": applicant_id,
+        "signals": build_flat_evidence(packet),
+        "income_verification_status": income.get("income_verification_status", "unknown"),
+        "employment_type": income.get("employment_type", "unknown"),
+        "deposit_pattern": detect_deposit_irregularity(income.get("bank_statement_transactions", [])),
+        "bnpl_providers": packet["exposure"].get("bnpl_providers", []),
+        "sources": {
+            source: {"confidence": data.get("confidence"), "freshness_days": data.get("freshness_days")}
+            for source, data in packet.items()
+        },
+    }
 
 
 @router.post("/decide")
