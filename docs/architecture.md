@@ -4,48 +4,41 @@
 
 ```mermaid
 graph TB
-    subgraph Frontend["Frontend (React + Vite)"]
-        UI[Decision Dashboard]
-        PipelineViz[Pipeline Visualization]
-        AgentChat[Agent Conversation Stream]
-        PolicyEditor[Policy Editor]
+    subgraph Frontend["Frontend - React + Vite"]
+        UI["Decision Dashboard"]
+        PipelineViz["Pipeline Visualization"]
+        AgentChat["Agent Conversation Stream"]
+        PolicyEditor["Policy Editor"]
     end
 
     subgraph DeepAgents["Deep Agents Harness"]
-        Orchestrator[Main Agent - Orchestrator]
-        
-        subgraph SubAgents["Sub-Agents"]
-            Eligibility[Eligibility Agent]
-            Affordability[Affordability Agent]
-            Risk[Risk Agent]
-        end
-
-        subgraph Skills["Skills"]
-            PolicySkill[/skills/credit-policy/]
-            EvidenceSkill[/skills/evidence-rules/]
-            ExplainSkill[/skills/explanation/]
-        end
-
-        Planning[Planning / TODO Tool]
-        ContextMgmt[Context Management]
+        Orchestrator["Main Agent - Orchestrator"]
+        Eligibility["Eligibility Agent"]
+        Affordability["Affordability Agent"]
+        Risk["Risk Agent"]
+        PolicySkill["Skill: credit-policy"]
+        EvidenceSkill["Skill: evidence-rules"]
+        ExplainSkill["Skill: explanation"]
+        Planning["Planning - TODO Tool"]
+        ContextMgmt["Context Management"]
     end
 
     subgraph Backend["Filesystem Backend"]
-        PolicyStore[policy/*.yaml]
-        EvidenceStore[evidence/{applicant}/]
-        DecisionLedger[decisions/*.json]
-        Memory[AGENTS.md - Persistent Memory]
+        PolicyStore["policy YAML files"]
+        EvidenceStore["evidence per applicant"]
+        DecisionLedger["decisions JSON ledger"]
+        Memory["AGENTS.md - Persistent Memory"]
     end
 
     subgraph Tools["Custom Tools"]
-        EvidenceTools[Evidence Fetch Tools]
-        ScoringTools[Scoring Tools]
-        PolicyTools[Policy Management Tools]
-        ExplainTools[Explanation Generator]
+        EvidenceTools["Evidence Fetch Tools"]
+        ScoringTools["Scoring Tools"]
+        PolicyTools["Policy Management Tools"]
+        ExplainTools["Explanation Generator"]
     end
 
-    UI -->|SSE Stream| Orchestrator
-    PolicyEditor -->|PUT /policy| PolicyTools
+    UI -->|"SSE Stream"| Orchestrator
+    PolicyEditor -->|"PUT /policy"| PolicyTools
     Orchestrator --> Eligibility
     Orchestrator --> Affordability
     Orchestrator --> Risk
@@ -59,7 +52,9 @@ graph TB
     PolicyTools --> PolicyStore
     Orchestrator --> DecisionLedger
     Orchestrator --> Memory
-    Skills -.->|loaded on demand| SubAgents
+    PolicySkill -.->|"loaded on demand"| Eligibility
+    EvidenceSkill -.->|"loaded on demand"| Affordability
+    ExplainSkill -.->|"loaded on demand"| Risk
     Planning -.-> Orchestrator
     ContextMgmt -.-> Orchestrator
 ```
