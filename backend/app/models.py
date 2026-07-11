@@ -59,6 +59,18 @@ class RiskAssessment(BaseModel):
     )
 
 
+class BnplReasoningAssessment(BaseModel):
+    """Single-pass BNPL agent output. It informs confidence and lineage but cannot
+    override hard rules or perform the final weighted-score decision."""
+
+    affordability: Literal["adequate", "marginal", "inadequate", "uncertain"]
+    risk: Literal["low", "moderate", "elevated", "high"]
+    confidence: float = Field(ge=0, le=1)
+    evidence_refs: list[str] = Field(max_length=4)
+    flags: list[str] = Field(default_factory=list, max_length=4)
+    reasoning: str = Field(max_length=300, description="Concise, audit-safe summary; never hidden chain-of-thought.")
+
+
 class ExplanationViews(BaseModel):
     """Structured output required from the Explanation agent (LLM path only)."""
 
@@ -88,6 +100,8 @@ class DecisionLineage(BaseModel):
     hard_rules_triggered: list[dict[str, Any]] = Field(default_factory=list)
     affordability_assessment: dict[str, Any] | None = None
     risk_assessment: dict[str, Any] | None = None
+    bnpl_reasoning_assessment: dict[str, Any] | None = None
+    agent_reasoning_status: str | None = None
     consensus: dict[str, Any] | None = None
     component_scores: dict[str, float] | None = None
     final_score: float | None = None

@@ -15,8 +15,8 @@ from deepagents.backends import FilesystemBackend
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 
-from app.config import OPENAI_MODEL, WORKSPACE_ROOT, require_api_key
-from app.models import AffordabilityAssessment, EligibilityAssessment, ExplanationViews, RiskAssessment
+from app.config import BNPL_AGENT_TIMEOUT_MS, BNPL_MODEL, OPENAI_MODEL, WORKSPACE_ROOT, require_api_key
+from app.models import AffordabilityAssessment, BnplReasoningAssessment, EligibilityAssessment, ExplanationViews, RiskAssessment
 from app.tools import scoring
 from app.agents.prompts import AFFORDABILITY_SYSTEM_PROMPT, ELIGIBILITY_SYSTEM_PROMPT, EXPLANATION_SYSTEM_PROMPT, RISK_SYSTEM_PROMPT
 
@@ -46,6 +46,20 @@ def _model() -> ChatOpenAI:
 
 def _backend() -> FilesystemBackend:
     return FilesystemBackend(root_dir=str(WORKSPACE_ROOT))
+
+
+@lru_cache(maxsize=1)
+def get_bnpl_reasoning_agent():
+    """One low-latency structured inference, deliberately without a ReAct/tool loop."""
+    require_api_key()
+    model = ChatOpenAI(
+        model=BNPL_MODEL,
+        temperature=0,
+        max_completion_tokens=180,
+        max_retries=0,
+        timeout=BNPL_AGENT_TIMEOUT_MS / 1000,
+    )
+    return model.with_structured_output(BnplReasoningAssessment, method="json_schema", strict=True)
 
 
 @lru_cache(maxsize=1)

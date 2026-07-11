@@ -31,6 +31,15 @@ export interface AgentMessage {
   timestamp: string;
 }
 
+export interface BnplReasoningAssessment {
+  affordability: "adequate" | "marginal" | "inadequate" | "uncertain";
+  risk: "low" | "moderate" | "elevated" | "high";
+  confidence: number;
+  evidence_refs: string[];
+  flags: string[];
+  reasoning: string;
+}
+
 export interface DecisionLineage {
   applicant_id: string;
   product: Product;
@@ -40,6 +49,8 @@ export interface DecisionLineage {
   hard_rules_triggered: { id: string; condition: string; reason_code: string }[];
   affordability_assessment: Record<string, unknown> | null;
   risk_assessment: Record<string, unknown> | null;
+  bnpl_reasoning_assessment: BnplReasoningAssessment | null;
+  agent_reasoning_status: string | null;
   consensus: Record<string, unknown> | null;
   component_scores: Record<string, number> | null;
   final_score: number | null;
@@ -97,7 +108,7 @@ export interface PolicySegment {
   mode: string;
   time_budget_ms: number;
   scoring: { weights: Record<string, number>; thresholds: Record<string, number> };
-  features: Record<string, boolean>;
+  features: Record<string, boolean | string | number>;
   eligibility: { min_score_band: string; min_credit_history_months: number };
   affordability: { dti_decline_ceiling: number };
   risk: { max_bnpl_stacking: number; max_utilization: number };

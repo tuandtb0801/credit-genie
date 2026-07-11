@@ -40,9 +40,13 @@ segments:
         approve: 0.75
         decline: 0.4
     features:
-      llm_reasoning: false
+      llm_reasoning: true
       agent_collaboration: false
       multi_pass_evidence: false
+      agent_mode: single_pass
+    agent:
+      timeout_ms: 1800
+      min_confidence: 0.6
     eligibility:
       min_score_band: fair
       min_credit_history_months: 6

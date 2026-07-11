@@ -24,8 +24,8 @@ The core insight: **same policy, same evidence schema, different execution strat
                     │  (BNPL)      │  │  (Personal Loan) │
                     │              │  │                  │
                     │  Budget: 2s  │  │  Budget: 60s    │
-                    │  No LLM      │  │  LLM reasoning  │
-                    │  Rules only  │  │  Agent collab   │
+                    │  1 agent call│  │  LLM reasoning  │
+                    │  No collab   │  │  Agent collab   │
                     │  Template    │  │  Rich explain   │
                     │  explain     │  │                  │
                     └──────────────┘  └─────────────────┘
@@ -65,20 +65,20 @@ The core insight: **same policy, same evidence schema, different execution strat
 │  Time allocation:                                                    │
 │  ├── Evidence lookup (pre-cached/indexed)     ~50-100ms              │
 │  ├── Eligibility rules                        ~10ms                  │
-│  ├── Affordability rules (pre-computed DTI)   ~10ms                  │
-│  ├── Risk rules (exposure cap, delinquency)   ~10ms                  │
+│  ├── Affordability + risk anchors              ~10ms                  │
+│  ├── Single-pass structured reasoning agent   ≤1800ms                 │
 │  ├── Scoring + threshold                      ~10ms                  │
 │  ├── Template explanation                     ~10ms                  │
-│  └── Total typical                            ~100-200ms             │
+│  └── Total target                             <2000ms p95            │
 │                                                                      │
 │  Features enabled:                                                   │
-│  ✓ Deterministic rules only                                          │
+│  ✓ One bounded reasoning-agent call                                 │
+│  ✓ Deterministic final rules, score, and thresholds                 │
 │  ✓ Pre-computed affordability (from last PL assessment or cached)    │
 │  ✓ Template-based explanation (filled from rule that fired)          │
-│  ✗ No LLM in request path                                           │
 │  ✗ No agent collaboration                                           │
 │  ✗ No multi-pass evidence gathering                                  │
-│  ✗ REFER only on hard triggers (not judgment calls)                  │
+│  ✓ Low-confidence/timeout agent responses safely trigger REFER       │
 │                                                                      │
 │  Tradeoff acknowledged:                                              │
 │  Less reasoning depth. Compensated by:                               │
@@ -112,9 +112,10 @@ segments:
       weights: { eligibility: 0.30, affordability: 0.35, risk: 0.35 }
       thresholds: { approve: 0.75, decline: 0.40 }  # tighter = more conservative
     features:
-      llm_reasoning: false
+      llm_reasoning: true
       agent_collaboration: false
       multi_pass_evidence: false
+      agent_mode: single_pass
 
 # Same hard rules apply to BOTH:
 hard_rules:

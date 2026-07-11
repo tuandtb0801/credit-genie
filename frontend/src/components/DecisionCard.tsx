@@ -28,6 +28,37 @@ function ScoreBreakdown({ record }: { record: DecisionRecord }) {
   );
 }
 
+function BnplReasoning({ record }: { record: DecisionRecord }) {
+  const assessment = record.lineage.bnpl_reasoning_assessment;
+  if (record.product !== "bnpl") return null;
+
+  return (
+    <div className="mt-4 rounded-sm border border-border bg-surface-2 p-3">
+      <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-wide">
+        <span className="font-semibold text-accent">BNPL reasoning agent</span>
+        <span className="text-ink-muted">
+          {record.lineage.agent_reasoning_status}
+          {assessment ? ` · confidence ${assessment.confidence.toFixed(2)}` : ""}
+        </span>
+      </div>
+      {assessment && (
+        <>
+          <p className="mt-2 text-[13px] leading-relaxed">{assessment.reasoning}</p>
+          <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-[10px] text-ink-muted">
+            <span className="rounded-sm bg-surface px-1.5 py-0.5">affordability: {assessment.affordability}</span>
+            <span className="rounded-sm bg-surface px-1.5 py-0.5">risk: {assessment.risk}</span>
+            {assessment.evidence_refs.map((evidenceRef) => (
+              <span key={evidenceRef} className="rounded-sm bg-surface px-1.5 py-0.5">
+                cites {evidenceRef}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 type Tab = "customer" | "reviewer" | "audit";
 
 export function DecisionCard({ record }: { record: DecisionRecord }) {
@@ -58,6 +89,8 @@ export function DecisionCard({ record }: { record: DecisionRecord }) {
           <ScoreBreakdown record={record} />
         </div>
       )}
+
+      <BnplReasoning record={record} />
 
       {record.lineage.degradations.length > 0 && (
         <div className="mt-3 rounded-sm border border-dashed border-border px-2.5 py-1.5 text-[11px] text-ink-muted">

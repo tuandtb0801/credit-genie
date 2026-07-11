@@ -53,7 +53,7 @@ async def decide(request: DecideRequest):
     """Run a decision. BNPL returns a plain JSON response; personal_loan streams SSE."""
     if request.product == "bnpl":
         start = time.perf_counter()
-        record = decide_bnpl(request.applicant_id)
+        record = await decide_bnpl(request.applicant_id)
         return {**record.model_dump(), "latency_ms": round((time.perf_counter() - start) * 1000, 2)}
 
     if request.product == "personal_loan":

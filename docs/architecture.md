@@ -137,12 +137,14 @@ flowchart TD
     subgraph FastPath["FAST PATH (BNPL — 2s budget)"]
         direction TB
         BP_Ingest[Stage 1: Cached Evidence Lookup<br/>~50-100ms]
-        BP_Rules[Stage 2: All Rules in Parallel<br/>Eligibility + Affordability + Risk<br/>~30ms]
+        BP_Rules[Stage 2a: Deterministic Anchors<br/>Eligibility + Affordability + Risk<br/>~30ms]
+        BP_Agent[Stage 2b: Single-Pass BNPL Agent<br/>Structured reasoning, hard deadline]
         BP_Score[Stage 3: Scoring<br/>~10ms]
         BP_Template[Stage 4: Template Explanation<br/>~10ms]
         
         BP_Ingest --> BP_Rules
-        BP_Rules --> BP_Score
+        BP_Rules --> BP_Agent
+        BP_Agent --> BP_Score
         BP_Score --> BP_Template
     end
 
@@ -438,10 +440,10 @@ graph TB
         direction TB
         BP_Budget["⏱ Budget: 2 seconds"]
         BP_Evidence["Evidence: Cached/pre-computed only"]
-        BP_Agents["Agents: Rules-only, no LLM"]
+        BP_Agents["Agents: One structured reasoning call"]
         BP_Collab["Collaboration: None"]
         BP_Explain["Explanation: Template fill"]
-        BP_Refer["REFER: Only hard triggers"]
+        BP_Refer["REFER: Hard triggers or unsafe agent confidence"]
     end
 
     subgraph Shared["Shared Across Both"]
