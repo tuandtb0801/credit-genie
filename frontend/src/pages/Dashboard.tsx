@@ -99,7 +99,7 @@ export function Dashboard() {
   }
 
   return (
-    <div className="grid grid-cols-[280px_1fr] gap-6">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
       <aside>
         <ApplicantPicker applicants={applicants} selectedId={selectedId} product={product} onSelect={selectApplicant} onProductChange={setProduct} />
         <button
@@ -112,7 +112,7 @@ export function Dashboard() {
         {error && <p className="mt-2 text-[12px] text-decline">{error}</p>}
       </aside>
 
-      <main className="flex flex-col gap-5">
+      <main className="min-w-0 flex flex-col gap-5">
         {evidence && (
           <section>
             <h2 className="mb-2 font-mono text-[11px] uppercase tracking-wide text-ink-muted">Evidence — what the rules &amp; agents cite</h2>
@@ -135,7 +135,7 @@ export function Dashboard() {
         )}
 
         {record && (
-          <section>
+          <section className="min-w-0">
             <h2 className="mb-2 font-mono text-[11px] uppercase tracking-wide text-ink-muted">Decision</h2>
             <DecisionCard record={record} />
           </section>
