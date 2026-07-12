@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Build frontend static assets
 cd frontend
-npm ci
+npm install
 npm run build
 cd ..
 
