@@ -1941,6 +1941,68 @@
         box-shadow: none;
       }
 
+      /* Personal Loan + BNPL architecture text bumped up by ~4px. */
+      #slide-5 h2,
+      #slide-6 h2 {
+        font-size: clamp(42px, calc(4.8vw + 4px), 80px);
+      }
+
+      #slide-5 .eyebrow,
+      #slide-6 .eyebrow {
+        font-size: clamp(15px, calc(0.9vw + 4px), 19px);
+      }
+
+      #slide-5 .source-node strong,
+      #slide-5 .tool-node strong,
+      #slide-6 .source-node strong,
+      #slide-6 .tool-node strong {
+        font-size: clamp(17px, calc(1vw + 4px), 20px);
+      }
+
+      #slide-5 .source-node span,
+      #slide-5 .tool-node span,
+      #slide-6 .source-node span,
+      #slide-6 .tool-node span {
+        font-size: clamp(14px, calc(0.74vw + 4px), 16px);
+      }
+
+      #slide-5 .orchestrator-badge,
+      #slide-5 .delegation-title,
+      #slide-6 .orchestrator-badge,
+      #slide-6 .delegation-title {
+        font-size: 14px;
+      }
+
+      #slide-5 .orchestrator-node h3,
+      #slide-6 .orchestrator-node h3 {
+        font-size: clamp(29px, calc(2vw + 4px), 38px);
+      }
+
+      #slide-5 .orchestrator-node p,
+      #slide-6 .orchestrator-node p {
+        font-size: clamp(16px, calc(0.88vw + 4px), 18px);
+      }
+
+      #slide-5 .orchestrator-features li,
+      #slide-6 .orchestrator-features li {
+        font-size: clamp(13px, calc(0.68vw + 4px), 15px);
+      }
+
+      #slide-5 .subagent-card strong,
+      #slide-6 .subagent-card strong {
+        font-size: clamp(16px, calc(0.92vw + 4px), 19px);
+      }
+
+      #slide-5 .subagent-card span,
+      #slide-6 .subagent-card span {
+        font-size: clamp(14px, calc(0.76vw + 4px), 16px);
+      }
+
+      #slide-5 .architecture-caption,
+      #slide-6 .architecture-caption {
+        font-size: clamp(14px, calc(0.8vw + 4px), 17px);
+      }
+
       @media (max-width: 1100px) {
         .slide { padding: 28px; }
         .football-slide { padding: 22px 34px; }
@@ -2149,111 +2211,7 @@
         </div>
       </section>
 
-      <section class="slide" id="slide-4" data-title="Personal Loan — agentic full path" data-duration="15" aria-hidden="true">
-        <span class="section-number">04 / PERSONAL LOAN</span>
-        <div class="slide-content path-layout">
-          <header class="slide-heading">
-            <div>
-              <p class="eyebrow">Full path</p>
-              <h2>High level architecture</h2>
-            </div>
-          </header>
-          <div class="agent-topology" aria-label="Personal Loan architecture with one orchestrator agent and three subagents">
-            <div class="topology-column">
-              <div class="source-node"><strong>React Dashboard</strong><span>POST /decide · SSE pipeline stream</span></div>
-              <div class="source-node"><strong>Filesystem Backend</strong><span>Evidence · active policy · skills · memory</span></div>
-            </div>
-            <article class="orchestrator-node">
-              <span class="orchestrator-badge">Main Agent</span>
-              <h3>Orchestrator Agent</h3>
-              <p>Owns the task plan, scopes context, delegates work, and controls the 60-second budget.</p>
-              <ul class="orchestrator-features">
-                <li>Planning + context management</li>
-                <li>Parallel delegation</li>
-                <li>Consensus + REFER escalation</li>
-                <li>SSE events + lineage</li>
-              </ul>
-            </article>
-            <div class="delegation-zone">
-              <span class="delegation-title">subagents=[] · scoped delegation</span>
-              <article class="subagent-card"><strong>Eligibility Subagent</strong><span>Rules-only minimum criteria and hard gate</span></article>
-              <article class="subagent-card"><strong>Affordability Subagent</strong><span>LLM reasoning · DTI · income stability · transactions</span></article>
-              <article class="subagent-card"><strong>Risk Subagent</strong><span>Hybrid risk assessment · exposure · delinquency <b class="challenge-chip">challenges affordability</b></span></article>
-            </div>
-            <div class="topology-column">
-              <div class="tool-node"><strong>Scoring Tools</strong><span>Hard rules · weights · thresholds</span></div>
-              <div class="tool-node"><strong>Explanation Tool</strong><span>Customer · reviewer · audit views</span></div>
-              <div class="tool-node"><strong>Decision Ledger</strong><span>Policy hash · evidence refs · timing</span></div>
-            </div>
-          </div>
-          <div class="architecture-caption">
-            <strong>Deep Agents harness</strong>
-            <span>1 Orchestrator Agent</span>
-            <span>3 subagents</span>
-            <span>skills loaded on demand</span>
-            <span>deterministic scoring tools</span>
-          </div>
-        </div>
-        <div class="speaker-notes">
-          <p>The Personal Loan path is organized around one Main Agent: the Orchestrator.</p>
-          <p>It owns planning, context management, timing, and the visible SSE stream. It delegates scoped work to Eligibility, Affordability, and Risk subagents. Eligibility remains rules-only; Affordability and Risk use bounded reasoning and can challenge each other.</p>
-          <p>The subagents return assessments to the Orchestrator. The Orchestrator then calls deterministic scoring and explanation tools, records the full lineage, and escalates unresolved disagreement to REFER.</p>
-        </div>
-      </section>
-
-      <section class="slide" id="slide-5" data-title="BNPL — orchestrated fast path" data-duration="15" aria-hidden="true">
-        <span class="section-number">05 / BNPL</span>
-        <div class="slide-content path-layout">
-          <header class="slide-heading">
-            <div>
-              <p class="eyebrow">Fast path</p>
-              <h2>High level architecture</h2>
-            </div>
-          </header>
-          <div class="agent-topology rules-topology" aria-label="BNPL architecture with one orchestrator agent and three rules-only subagents">
-            <div class="topology-column">
-              <div class="source-node"><strong>BNPL Request</strong><span>Applicant · product · transaction context</span></div>
-              <div class="source-node"><strong>Cached Evidence</strong><span>Shared schema · active YAML policy</span></div>
-            </div>
-            <article class="orchestrator-node">
-              <span class="orchestrator-badge">Main Agent · fast mode</span>
-              <h3>Orchestrator Agent</h3>
-              <p>Selects the fast path, fans rules out in parallel, and assembles one auditable result.</p>
-              <ul class="orchestrator-features">
-                <li>2-second execution budget</li>
-                <li>Parallel rules delegation</li>
-                <li>No collaboration round</li>
-                <li>Same lineage contract</li>
-              </ul>
-            </article>
-            <div class="delegation-zone">
-              <span class="delegation-title">Rules-only subagents · parallel</span>
-              <article class="subagent-card"><strong>Eligibility Subagent</strong><span>Score band · credit history · minimum criteria</span></article>
-              <article class="subagent-card"><strong>Affordability Subagent</strong><span>Deterministic DTI anchor · current obligations</span></article>
-              <article class="subagent-card"><strong>Risk Subagent</strong><span>Exposure · utilization · BNPL stacking · delinquency</span></article>
-            </div>
-            <div class="topology-column">
-              <div class="tool-node"><strong>Scoring Tool</strong><span>Weights · thresholds · reason code</span></div>
-              <div class="tool-node"><strong>Template Explain</strong><span>No generation latency</span></div>
-              <div class="tool-node"><strong>Decision Ledger</strong><span>Same policy + evidence lineage</span></div>
-            </div>
-          </div>
-          <div class="architecture-caption">
-            <strong>Fast-path contract</strong>
-            <span>1 Orchestrator Agent</span>
-            <span>3 rules-only subagents</span>
-            <span>no LLM</span>
-            <span>no collaboration</span>
-          </div>
-        </div>
-        <div class="speaker-notes">
-          <p>BNPL keeps the same Orchestrator-and-subagent structure, but switches every delegated assessment to rules-only mode.</p>
-          <p>The Orchestrator fans eligibility, affordability, and risk checks out in parallel. These subagents do not call an LLM and do not run a collaboration round. They return deterministic results immediately.</p>
-          <p>The Orchestrator passes those results through scoring and template explanation tools, then writes the same audit-lineage format—all within the two-second budget.</p>
-        </div>
-      </section>
-
-      <section class="slide mermaid-slide" id="slide-6" data-title="Architecture.md — Mermaid overview" data-duration="15" aria-hidden="true">
+      <section class="slide mermaid-slide" id="slide-4" data-title="Architecture.md — Mermaid overview" data-duration="15" aria-hidden="true">
         <div class="slide-content mermaid-layout">
           <div class="mermaid-frame" id="architecture-mermaid-frame">
             <div class="mermaid-output" id="mermaid-output" role="img" aria-label="Credit Genie high-level Mermaid architecture"></div>
@@ -2323,6 +2281,110 @@ graph TB
           <p>This is the architecture directly from our architecture document.</p>
           <p>The React dashboard streams into one Main Agent—the Orchestrator. The Orchestrator delegates to Eligibility, Affordability, and Risk agents, calls deterministic scoring and explanation tools, and writes the decision lineage to the filesystem backend.</p>
           <p>Skills, planning, and context management support the Orchestrator and subagents without replacing the deterministic decision controls.</p>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-5" data-title="Personal Loan — agentic full path" data-duration="15" aria-hidden="true">
+        <span class="section-number">05 / PERSONAL LOAN</span>
+        <div class="slide-content path-layout">
+          <header class="slide-heading">
+            <div>
+              <p class="eyebrow">Full path</p>
+              <h2>High level architecture</h2>
+            </div>
+          </header>
+          <div class="agent-topology" aria-label="Personal Loan architecture with one orchestrator agent and three subagents">
+            <div class="topology-column">
+              <div class="source-node"><strong>React Dashboard</strong><span>POST /decide · SSE pipeline stream</span></div>
+              <div class="source-node"><strong>Filesystem Backend</strong><span>Evidence · active policy · skills · memory</span></div>
+            </div>
+            <article class="orchestrator-node">
+              <span class="orchestrator-badge">Main Agent</span>
+              <h3>Orchestrator Agent</h3>
+              <p>Owns the task plan, scopes context, delegates work, and controls the 60-second budget.</p>
+              <ul class="orchestrator-features">
+                <li>Planning + context management</li>
+                <li>Parallel delegation</li>
+                <li>Consensus + REFER escalation</li>
+                <li>SSE events + lineage</li>
+              </ul>
+            </article>
+            <div class="delegation-zone">
+              <span class="delegation-title">subagents=[] · scoped delegation</span>
+              <article class="subagent-card"><strong>Eligibility Subagent</strong><span>Rules-only minimum criteria and hard gate</span></article>
+              <article class="subagent-card"><strong>Affordability Subagent</strong><span>LLM reasoning · DTI · income stability · transactions</span></article>
+              <article class="subagent-card"><strong>Risk Subagent</strong><span>Hybrid risk assessment · exposure · delinquency <b class="challenge-chip">challenges affordability</b></span></article>
+            </div>
+            <div class="topology-column">
+              <div class="tool-node"><strong>Scoring Tools</strong><span>Hard rules · weights · thresholds</span></div>
+              <div class="tool-node"><strong>Explanation Tool</strong><span>Customer · reviewer · audit views</span></div>
+              <div class="tool-node"><strong>Decision Ledger</strong><span>Policy hash · evidence refs · timing</span></div>
+            </div>
+          </div>
+          <div class="architecture-caption">
+            <strong>Deep Agents harness</strong>
+            <span>1 Orchestrator Agent</span>
+            <span>3 subagents</span>
+            <span>skills loaded on demand</span>
+            <span>deterministic scoring tools</span>
+          </div>
+        </div>
+        <div class="speaker-notes">
+          <p>The Personal Loan path is organized around one Main Agent: the Orchestrator.</p>
+          <p>It owns planning, context management, timing, and the visible SSE stream. It delegates scoped work to Eligibility, Affordability, and Risk subagents. Eligibility remains rules-only; Affordability and Risk use bounded reasoning and can challenge each other.</p>
+          <p>The subagents return assessments to the Orchestrator. The Orchestrator then calls deterministic scoring and explanation tools, records the full lineage, and escalates unresolved disagreement to REFER.</p>
+        </div>
+      </section>
+
+      <section class="slide" id="slide-6" data-title="BNPL — orchestrated fast path" data-duration="15" aria-hidden="true">
+        <span class="section-number">06 / BNPL</span>
+        <div class="slide-content path-layout">
+          <header class="slide-heading">
+            <div>
+              <p class="eyebrow">Fast path</p>
+              <h2>High level architecture</h2>
+            </div>
+          </header>
+          <div class="agent-topology rules-topology" aria-label="BNPL architecture with one orchestrator agent and three rules-only subagents">
+            <div class="topology-column">
+              <div class="source-node"><strong>BNPL Request</strong><span>Applicant · product · transaction context</span></div>
+              <div class="source-node"><strong>Cached Evidence</strong><span>Shared schema · active YAML policy</span></div>
+            </div>
+            <article class="orchestrator-node">
+              <span class="orchestrator-badge">Main Agent · fast mode</span>
+              <h3>Orchestrator Agent</h3>
+              <p>Selects the fast path, fans rules out in parallel, and assembles one auditable result.</p>
+              <ul class="orchestrator-features">
+                <li>2-second execution budget</li>
+                <li>Parallel rules delegation</li>
+                <li>No collaboration round</li>
+                <li>Same lineage contract</li>
+              </ul>
+            </article>
+            <div class="delegation-zone">
+              <span class="delegation-title">Rules-only subagents · parallel</span>
+              <article class="subagent-card"><strong>Eligibility Subagent</strong><span>Score band · credit history · minimum criteria</span></article>
+              <article class="subagent-card"><strong>Affordability Subagent</strong><span>Deterministic DTI anchor · current obligations</span></article>
+              <article class="subagent-card"><strong>Risk Subagent</strong><span>Exposure · utilization · BNPL stacking · delinquency</span></article>
+            </div>
+            <div class="topology-column">
+              <div class="tool-node"><strong>Scoring Tool</strong><span>Weights · thresholds · reason code</span></div>
+              <div class="tool-node"><strong>Template Explain</strong><span>No generation latency</span></div>
+              <div class="tool-node"><strong>Decision Ledger</strong><span>Same policy + evidence lineage</span></div>
+            </div>
+          </div>
+          <div class="architecture-caption">
+            <strong>Fast-path contract</strong>
+            <span>1 Orchestrator Agent</span>
+            <span>3 rules-only subagents</span>
+            <span>no LLM</span>
+            <span>no collaboration</span>
+          </div>
+        </div>
+        <div class="speaker-notes">
+          <p>BNPL keeps the same Orchestrator-and-subagent structure, but switches every delegated assessment to rules-only mode.</p>
+          <p>The Orchestrator fans eligibility, affordability, and risk checks out in parallel. These subagents do not call an LLM and do not run a collaboration round. They return deterministic results immediately.</p>
+          <p>The Orchestrator passes those results through scoring and template explanation tools, then writes the same audit-lineage format—all within the two-second budget.</p>
         </div>
       </section>
 
