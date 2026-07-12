@@ -48,48 +48,106 @@ GoTyme Bank needs a system that handles **both** products through a unified poli
 
 Credit Genie uses a **hybrid deterministic-agentic architecture**: Python orchestrates the pipeline deterministically (for auditability), while specialized LLM agents handle reasoning at leaf nodes (where human-like judgment adds value).
 
+```mermaid
+graph TB
+    %% Entry
+    Request["📋 Application Request<br/>{product, applicant_id}"]
+    
+    %% Mode Selection
+    Request --> ModeSelector{"🔀 Mode Selector"}
+    ModeSelector -->|"BNPL"| FastPath
+    ModeSelector -->|"Personal Loan"| FullPath
+
+    %% Fast Path
+    subgraph FastPath["⚡ FAST PATH — BNPL (budget: 2s)"]
+        direction TB
+        FP_Rules["Rules Engine<br/>No LLM calls"]
+        FP_Score["Deterministic Scoring"]
+        FP_Template["Template Explanation"]
+        FP_Rules --> FP_Score --> FP_Template
+    end
+
+    %% Full Path
+    subgraph FullPath["🧠 FULL PATH — Personal Loan (budget: 60s)"]
+        direction TB
+        
+        %% Evidence Layer
+        Evidence["📦 Evidence Ingest<br/>Bureau + Bank + Internal<br/>Quality & freshness metadata"]
+        
+        %% Agent Layer
+        subgraph Agents["Agent Collaboration Layer"]
+            direction LR
+            Eligibility["🚪 Eligibility Agent<br/>─────────────<br/>Gate check (rules only)<br/>Score band, blacklist,<br/>credit file age"]
+            Affordability["💰 Affordability Agent<br/>─────────────<br/>LLM Reasoning<br/>DTI analysis, income<br/>stability, deposit patterns"]
+            Risk["⚠️ Risk Agent<br/>─────────────<br/>LLM Reasoning<br/>Delinquency, fraud,<br/>exposure, BNPL stacking"]
+        end
+
+        %% A2A Protocol
+        Risk -->|"🗣️ CHALLENGE<br/>'Irregular deposits suggest instability'"| Affordability
+        Affordability -->|"💬 RESPOND<br/>'Adjusted confidence, citing counter-evidence'"| Risk
+
+        %% Scoring
+        Scoring["⚖️ Consensus & Scoring<br/>─────────────<br/>Deterministic weighted score<br/>Disagreement → automatic REFER"]
+        
+        %% Explanation
+        Explanation["📝 Explanation Agent<br/>─────────────<br/>LLM Reasoning<br/>Cited rationale per audience:<br/>Customer │ Reviewer │ Auditor"]
+
+        Evidence --> Agents
+        Agents --> Scoring
+        Scoring --> Explanation
+    end
+
+    %% Outputs
+    FastPath --> Decision
+    FullPath --> Decision
+    Decision["✅ Decision Record<br/>APPROVE │ DECLINE │ REFER<br/>+ evidence trail + timing"]
+
+    %% Policy
+    Policy["📄 Policy-as-YAML<br/>Runtime reload, no deploy"]
+    Policy -.->|"rules & thresholds"| FastPath
+    Policy -.->|"rules & thresholds"| Scoring
+
+    %% Frontend
+    Decision --> Dashboard["📊 React Dashboard<br/>Real-time SSE streaming<br/>Pipeline viz │ Agent chat │ Decision card"]
 ```
-                    ┌──────────────────────────────────┐
-                    │         APPLICATION REQUEST       │
-                    │     { product, applicant_id }     │
-                    └───────────────┬──────────────────┘
-                                    │
-                                    ▼
-                    ┌──────────────────────────────────┐
-                    │        MODE SELECTOR              │
-                    │   BNPL → Fast Path (2s, no LLM)  │
-                    │   PL   → Full Path (60s, agents) │
-                    └──────────┬───────────────────────┘
-                               │
-              ┌────────────────▼─────────────────────────────────┐
-              │          FULL PATH — AGENT PIPELINE               │
-              │                                                   │
-              │  ┌─────────┐   ┌──────────────┐   ┌──────────┐  │
-              │  │ELIGIBILITY│  │AFFORDABILITY │   │   RISK    │  │
-              │  │  Agent   │   │    Agent     │   │   Agent   │  │
-              │  │          │   │              │   │           │  │
-              │  │ Gate     │   │ Income       │   │ Delinq.   │  │
-              │  │ check    │   │ analysis     │   │ Fraud     │  │
-              │  │ (rules)  │   │ DTI calc     │   │ Exposure  │  │
-              │  └─────────┘   └──────▲───────┘   └─────┬─────┘  │
-              │                       │                  │         │
-              │                       └── CHALLENGE ─────┘         │
-              │                       └── RESPOND ───────┘         │
-              │                                                   │
-              │  ┌─────────────────────────────────────────────┐  │
-              │  │          CONSENSUS & SCORING                 │  │
-              │  │  Deterministic: weighted score, thresholds   │  │
-              │  │  Disagreement → automatic REFER              │  │
-              │  └─────────────────────────────────────────────┘  │
-              │                                                   │
-              │  ┌─────────────────────────────────────────────┐  │
-              │  │         EXPLANATION AGENT                    │  │
-              │  │  Cited rationale per audience:               │  │
-              │  │  • Customer: plain language                  │  │
-              │  │  • Reviewer: factor breakdown               │  │
-              │  │  • Auditor: full evidence trail              │  │
-              │  └─────────────────────────────────────────────┘  │
-              └──────────────────────────────────────────────────┘
+
+#### How Agent Collaboration Works (A2A Protocol)
+
+```mermaid
+sequenceDiagram
+    participant O as Orchestrator
+    participant E as Eligibility Agent
+    participant A as Affordability Agent
+    participant R as Risk Agent
+    participant X as Explanation Agent
+
+    O->>E: Check minimum criteria
+    E-->>O: PASS (rules only, <1s)
+    
+    O->>A: Assess affordability (evidence packet)
+    O->>R: Assess risk (evidence packet)
+    
+    Note over A,R: Parallel execution within 25s budget
+    
+    R->>A: 🗣️ CHALLENGE: "Irregular deposit pattern detected.<br/>Income stability questionable."
+    A->>R: 💬 RESPOND: "Acknowledged. Confidence lowered<br/>from 0.82 to 0.65. Citing seasonal pattern."
+    
+    A-->>O: Assessment: marginal (confidence: 0.65)
+    R-->>O: Assessment: moderate risk (confidence: 0.78)
+    
+    Note over O: Deterministic scoring:<br/>weighted_score = 0.45×affordability + 0.35×risk + 0.20×eligibility
+
+    alt Agents Agree + Score ≥ threshold
+        O->>X: Generate APPROVE explanation
+    else Agents Disagree or Low Confidence
+        O->>X: Generate REFER explanation
+        Note over O: Disagreement → automatic REFER<br/>Uncertainty is never hidden
+    else Hard Rule Failure
+        O->>X: Generate DECLINE explanation
+    end
+    
+    X-->>O: Cited rationale (audience-tailored)
+    O-->>O: Save decision record + lineage
 ```
 
 ### Agent Roles & Collaboration
