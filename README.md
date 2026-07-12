@@ -1,123 +1,201 @@
 # Credit Genie
 
-> **Agentic AI Build Week 2026 — GoTyme Use Case 7**
+> **Agentic AI Build Week 2026 — GoTyme Use Case 7: Credit Decisioning**
 
-AI-powered credit decision engine where collaborative agents turn fragmented borrower evidence and evolving policy into fast, consistent, explainable lending decisions.
+An agentic credit decision engine where specialized AI agents collaborate like a credit committee — debating, challenging, and citing evidence — to deliver fast, consistent, explainable lending decisions.
 
-## Problem
+---
 
-Banks cannot turn fragmented borrower evidence + changing credit policy into fast, consistent, explainable decisions across personal loans and BNPL.
+## The Problem Space
 
-| # | Problem | Impact |
-|---|---------|--------|
-| 1 | Fragmented evidence | Data scattered across bureaus, statements, internal systems — no unified view |
-| 2 | Slow policy change | Rule updates require code deployments and weeks of dev cycles |
-| 3 | Explanation gap | Opaque scores with no meaningful rationale for customers, reviewers, or auditors |
+### Why Credit Decisioning is Broken
 
-## Approach
+Digital banks process thousands of loan applications daily. The current state is fundamentally flawed:
 
-**Key insight**: Use agents for reasoning, plain code for coordination.
+**1. Fragmented Evidence, No Unified Truth**
 
-- **Deterministic orchestration** — Python controls the pipeline (scoring, weighting, thresholds). Reproducible for audit.
-- **LLM reasoning at leaf nodes** — Agents handle nuanced judgment (income stability, fraud signals, explanation generation).
-- **Agent collaboration via A2A protocol** — Risk agent adversarially challenges Affordability agent. Disagreement triggers automatic REFER.
-- **Policy-as-YAML** — Credit rules updated at runtime without redeployment.
-- **Dual execution modes** — Same policy schema, different speed/depth tradeoffs per product.
+A single applicant's creditworthiness is scattered across 5+ disconnected sources: credit bureau scores, bank transaction history, existing loan obligations, employment records, and behavioral signals. Today, rule engines consume flat features — they cannot *reason* about contradictions (e.g., high income but irregular deposits suggesting instability).
 
-## High-Level Architecture
+**2. Policy Changes Are Deployment Events**
+
+When a bank's risk appetite shifts (recession, new regulation, competitive pressure), updating decision rules requires developer involvement, code changes, testing cycles, and deployment windows. A policy change that should take hours takes weeks. During that gap, decisions are made against stale rules.
+
+**3. Decisions Are Black Boxes**
+
+Regulators require explanations. Customers demand transparency. Internal reviewers need audit trails. Yet traditional scoring models produce a number — not a narrative. "Score: 642, Declined" tells no one *why*, and no one can challenge it meaningfully.
+
+**4. One-Size-Fits-All Execution**
+
+A $50 Buy-Now-Pay-Later purchase and a $50,000 personal loan cannot use the same decision depth. BNPL needs sub-2-second response. Personal loans can afford 60 seconds of deep reasoning. Traditional systems either over-engineer the simple case or under-serve the complex one.
+
+### The GoTyme Challenge
+
+GoTyme Bank needs a system that handles **both** products through a unified policy framework, adapts to policy changes without deployment, explains every decision with cited evidence, and surfaces disagreement rather than hiding uncertainty.
+
+---
+
+## How Agentic AI Solves This
+
+### Why Agents — Not Rules, Not a Single LLM Call
+
+| Approach | Limitation |
+|----------|-----------|
+| Rule engines | Cannot reason about nuance, contradictions, or novel patterns |
+| Single LLM call | No separation of concerns, no adversarial checking, hallucination risk on financial data |
+| **Multi-agent collaboration** | **Specialized reasoning + adversarial verification + cited evidence + deterministic scoring** |
+
+### The Agentic Architecture
+
+Credit Genie uses a **hybrid deterministic-agentic architecture**: Python orchestrates the pipeline deterministically (for auditability), while specialized LLM agents handle reasoning at leaf nodes (where human-like judgment adds value).
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     React Dashboard (SSE)                        │
-│  Pipeline Viz │ Agent Conversations │ Decision Card │ Policy Ed  │
-└───────────────────────────────┬─────────────────────────────────┘
-                                │
-                    ┌───────────▼───────────┐
-                    │    FastAPI Backend     │
-                    │    Mode Selector       │
-                    └───┬───────────────┬───┘
-                        │               │
-           ┌────────────▼──┐    ┌───────▼────────────┐
-           │   FAST PATH   │    │     FULL PATH      │
-           │   (BNPL)      │    │   (Personal Loan)  │
-           │               │    │                    │
-           │  Budget: 2s   │    │  Budget: 60s       │
-           │  No LLM       │    │  LLM reasoning     │
-           │  Rules only   │    │  Agent collab      │
-           └───────────────┘    └────────┬───────────┘
-                                         │
-                         ┌───────────────┼───────────────┐
-                         │               │               │
-                    ┌────▼────┐    ┌─────▼─────┐   ┌────▼────┐
-                    │Eligibility│   │Affordability│  │  Risk   │
-                    │  Agent   │    │   Agent    │   │  Agent  │
-                    │          │    │            │   │         │
-                    │ Gate     │    │ DTI, income│   │ Adverse │
-                    │ check    │    │ stability  │   │ review  │
-                    └──────────┘    └─────▲──────┘   └────┬────┘
-                                          │               │
-                                          └── challenge ──┘
+                    ┌──────────────────────────────────┐
+                    │         APPLICATION REQUEST       │
+                    │     { product, applicant_id }     │
+                    └───────────────┬──────────────────┘
+                                    │
+                                    ▼
+                    ┌──────────────────────────────────┐
+                    │        MODE SELECTOR              │
+                    │   BNPL → Fast Path (2s, no LLM)  │
+                    │   PL   → Full Path (60s, agents) │
+                    └──────────┬───────────────────────┘
+                               │
+              ┌────────────────▼─────────────────────────────────┐
+              │          FULL PATH — AGENT PIPELINE               │
+              │                                                   │
+              │  ┌─────────┐   ┌──────────────┐   ┌──────────┐  │
+              │  │ELIGIBILITY│  │AFFORDABILITY │   │   RISK    │  │
+              │  │  Agent   │   │    Agent     │   │   Agent   │  │
+              │  │          │   │              │   │           │  │
+              │  │ Gate     │   │ Income       │   │ Delinq.   │  │
+              │  │ check    │   │ analysis     │   │ Fraud     │  │
+              │  │ (rules)  │   │ DTI calc     │   │ Exposure  │  │
+              │  └─────────┘   └──────▲───────┘   └─────┬─────┘  │
+              │                       │                  │         │
+              │                       └── CHALLENGE ─────┘         │
+              │                       └── RESPOND ───────┘         │
+              │                                                   │
+              │  ┌─────────────────────────────────────────────┐  │
+              │  │          CONSENSUS & SCORING                 │  │
+              │  │  Deterministic: weighted score, thresholds   │  │
+              │  │  Disagreement → automatic REFER              │  │
+              │  └─────────────────────────────────────────────┘  │
+              │                                                   │
+              │  ┌─────────────────────────────────────────────┐  │
+              │  │         EXPLANATION AGENT                    │  │
+              │  │  Cited rationale per audience:               │  │
+              │  │  • Customer: plain language                  │  │
+              │  │  • Reviewer: factor breakdown               │  │
+              │  │  • Auditor: full evidence trail              │  │
+              │  └─────────────────────────────────────────────┘  │
+              └──────────────────────────────────────────────────┘
 ```
 
-### Agent Roles
+### Agent Roles & Collaboration
 
-| Agent | Role | Method |
-|-------|------|--------|
-| **Orchestrator** | Coordinate pipeline, enforce budgets, save decisions | Deterministic Python |
-| **Eligibility** | Gate check — minimum criteria (score band, blacklist) | Rules only, no LLM |
-| **Affordability** | Can applicant service this debt? (DTI, income patterns) | LLM reasoning |
-| **Risk** | What could go wrong? Adversarially challenges Affordability | LLM reasoning |
+| Agent | Purpose | Method | Why Agentic? |
+|-------|---------|--------|--------------|
+| **Orchestrator** | Pipeline coordination, time budgets, decision records | Deterministic Python | Ensures reproducibility for audit |
+| **Eligibility** | Gate check — score band, blacklist, credit file age | Rules only | Binary pass/fail, no judgment needed |
+| **Affordability** | Can applicant service this debt? | LLM (OpenAI via LangChain) | Reasons about income stability, deposit irregularities, employment patterns |
+| **Risk** | What could go wrong? | LLM (OpenAI via LangChain) | Adversarially challenges Affordability, detects fraud signals, assesses exposure |
+| **Explanation** | Generate cited rationale | LLM (OpenAI via LangChain) | Produces human-readable narratives tailored to audience |
 
-### Decision Outcomes
+### Agent-to-Agent (A2A) Collaboration Protocol
 
-- **APPROVE** — All agents agree, score above threshold
-- **DECLINE** — Hard rule failure or score below threshold
-- **REFER** — Agent disagreement or low confidence, needs human review
+This is not prompt chaining. Agents actively collaborate:
+
+1. **Risk challenges Affordability** — "Your DTI looks adequate, but I see irregular deposit patterns suggesting income instability. Reconsider."
+2. **Affordability responds** — Adjusts confidence score, cites additional evidence, or rebuts with counter-evidence.
+3. **Disagreement triggers REFER** — When agents cannot reach consensus, the decision escalates automatically. No silent overrides.
+
+This mimics how a real credit committee works: specialists debate, challenge assumptions, and escalate genuine uncertainty.
+
+### Why This Architecture Works for Banking
+
+| Banking Requirement | How Credit Genie Addresses It |
+|--------------------|-----------------------------|
+| **Auditability** | Deterministic scoring layer — same inputs always produce same score |
+| **Explainability** | Every decision includes cited evidence trail per audience |
+| **Speed** | Dual-mode: 2s BNPL (rules), 60s personal loan (agents) |
+| **Adaptability** | Policy-as-YAML, reload at runtime, no deployment needed |
+| **Safety** | Agent disagreement surfaces as REFER, not hidden consensus |
+| **Transparency** | Real-time SSE streaming shows agents reasoning live |
+
+---
+
+## Key Innovation: Policy-as-YAML with Runtime Reload
+
+```yaml
+# policy/personal_loan.yaml — change thresholds without deployment
+segments:
+  standard:
+    score_band_minimum: 580
+    dti_decline_ceiling: 0.55
+    weights:
+      affordability: 0.45
+      risk: 0.35
+      eligibility: 0.20
+    thresholds:
+      approve: 72
+      refer: 55
+```
+
+Update YAML → next decision uses new rules. No deploy. No restart. Demonstrated live with Aisha Mohammed persona: DECLINE under old policy, APPROVE after threshold change.
+
+---
+
+## Dual Execution Modes
+
+| | Personal Loan (Full Path) | BNPL (Fast Path) |
+|---|---|---|
+| **Budget** | 60 seconds | 2 seconds |
+| **Method** | Multi-agent LLM reasoning | Deterministic rules only |
+| **Agents** | Eligibility + Affordability + Risk + Explanation | None (zero LLM calls) |
+| **Explanation** | Rich, cited, audience-tailored | Template-based |
+| **When** | High-value decisions needing nuance | High-volume, low-risk purchases |
+
+Same policy schema. Same evidence format. Different execution depth. One architecture.
+
+---
+
+## Impact & Real-World Usefulness
+
+- **Decision speed**: 60s for complex loans (vs. days with manual review), 2s for BNPL
+- **Policy agility**: Hours to update rules (vs. weeks of development cycles)
+- **Transparency**: Every decision is explainable and challengeable
+- **Safety**: Disagreement surfaces as REFER — uncertainty is never hidden
+- **Scalability**: BNPL path handles high volume without LLM costs; full path reserved for decisions that need depth
+
+---
+
+## Demo Scenarios
+
+| Persona | Product | Outcome | What It Demonstrates |
+|---------|---------|---------|---------------------|
+| Sarah Chen | PL + BNPL | APPROVE | Happy path — agents agree, clean evidence |
+| Raj Patel | PL | REFER | **Agent disagreement** — Risk challenges Affordability on contradictory income signals |
+| Maria Santos | BNPL | DECLINE | Fast path — over-exposure caught by rules in <2s |
+| James Wilson | PL | DECLINE | Severe delinquency — hard rule failure |
+| Aisha Mohammed | PL | DECLINE→APPROVE | **Runtime policy change** — update YAML, decision flips without restart |
+
+---
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
+| Agent Framework | Deep Agents + LangGraph + LangChain-OpenAI |
 | Backend | Python 3.12, FastAPI, Uvicorn |
-| Agent Framework | Deep Agents, LangGraph, LangChain-OpenAI |
+| LLM | OpenAI (via LangChain-OpenAI) |
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS 4 |
-| Streaming | SSE (Server-Sent Events) |
+| Real-time | SSE (Server-Sent Events) |
 | Policy Engine | YAML with runtime reload |
 | Validation | Pydantic |
+| Deployment | AWS |
 
-## Project Structure
-
-```
-credit-genie/
-├── backend/
-│   ├── main.py                 # FastAPI app entrypoint
-│   ├── app/
-│   │   ├── orchestrator.py     # Personal Loan full path
-│   │   ├── bnpl.py             # BNPL fast path (no LLM)
-│   │   ├── agents/             # LangGraph agent definitions
-│   │   ├── tools/              # Scoring, policy, evidence, explanation
-│   │   ├── api/                # REST + SSE routes
-│   │   ├── models.py           # Pydantic schemas
-│   │   └── ledger.py           # Decision record storage
-│   └── policy/                 # YAML policy files
-├── frontend/
-│   ├── src/
-│   │   ├── pages/              # Dashboard, PolicyEditor
-│   │   ├── components/         # PipelineViz, AgentConversation, DecisionCard
-│   │   └── api/                # SSE client
-│   └── package.json
-└── docs/                       # Architecture, scope, agent design
-```
-
-## Test Personas
-
-| Persona | Product | Expected | Demonstrates |
-|---------|---------|----------|--------------|
-| Sarah Chen | PL + BNPL | APPROVE | Happy path |
-| Raj Patel | PL | REFER | Agent disagreement (contradictory income) |
-| Maria Santos | BNPL | DECLINE | Over-exposed |
-| James Wilson | PL | DECLINE | Severe delinquency |
-| Aisha Mohammed | PL | DECLINE→APPROVE | Runtime policy change |
+---
 
 ## Quick Start
 
@@ -133,6 +211,8 @@ cd frontend
 npm install
 npm run dev
 ```
+
+---
 
 ## Documentation
 
