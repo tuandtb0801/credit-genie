@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: credit-genie
+    runtime: python
+    buildCommand: ./render-build.sh
+    startCommand: cd backend && uv run uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: NODE_VERSION
+        value: "20"
